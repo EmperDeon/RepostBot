@@ -1,0 +1,9 @@
+[submodule "vendor/tgbot-cpp"]
+	path = vendor/tgbot-cpp
+	url = https://github.com/reo7sp/tgbot-cpp.git
+[submodule "vendor/verdigris"]
+	path = vendor/verdigris
+	url = https://github.com/woboq/verdigris
+[submodule "vendor/cotire"]
+	path = vendor/cotire
+	url = https://github.com/sakra/cotire

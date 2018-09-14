@@ -1,0 +1,39 @@
+# Copyright (c) 2018 by Ilya Barykin
+# Released under the MIT License.
+# See the provided LICENSE.TXT file for details.
+
+cmake_minimum_required(VERSION 3.10)
+project(RepostBot)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor")
+
+
+find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
+
+message(STATUS "Qt version: " ${Qt5_VERSION})
+
+include(cotire/CMake/cotire)
+add_subdirectory(vendor/tgbot-cpp)
+include_directories(vendor/tgbot-cpp/include)
+
+
+add_executable(RepostBot
+        interfaces/Threadable.h interfaces/Model.h interfaces/Model.cpp interfaces/Exporter.h interfaces/Importer.h interfaces/User.h
+        exports/ETelegram.cpp exports/ETelegram.h
+        imports/IVk.cpp imports/IVk.h vars.h
+        models/Post.h models/Post.cpp models/Error.cpp models/Error.h
+
+        Storage.cpp Storage.h json.hpp Runner.cpp Runner.h
+        utils/USingleton.h main.cpp
+
+        )
+
+set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
+target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot ssl crypto)
+
+cotire(RepostBot)

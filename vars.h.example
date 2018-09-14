@@ -1,0 +1,20 @@
+/*
+	Copyright (c) 2018 by Ilya Barykin
+	Released under the MIT License.
+	See the provided LICENSE.TXT file for details.
+*/
+
+#ifndef REPOSTBOT_VARS_H
+#define REPOSTBOT_VARS_H
+
+// Storage variables
+#define STORAGE_FILE "~/.config/RepostBot/config.json"
+
+// Create bot through @BotFather
+#define TELEGRAM_TOKEN "<Telegram token>"
+
+// https://oauth.vk.com/authorize?client_id=5135481&scope=offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&v=5.84&response_type=token
+#define VK_TOKEN "<VK token>"
+
+
+#endif //REPOSTBOT_VARS_H
