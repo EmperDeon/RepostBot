@@ -10,10 +10,10 @@
 int main(int argc, char **argv) {
     QCoreApplication a(argc, argv);
 
-    auto *storage = Storage::instance();
-    auto *app = Runner::instance();
-
-    app->start();
+//    auto *storage = Storage::instance();
+//    auto *app = Runner::instance();
+//
+//    app->start();
 
     return QCoreApplication::exec();
 }

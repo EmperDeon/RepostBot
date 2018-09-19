@@ -23,7 +23,15 @@ Telegram (or maybe other messengers later) bot for reposting messages/posts from
 - models
   - Error
   - Post
+- queue
+  - QueueManager
+  - QueueTask
+- tasks
+  - Tasker - create and manage tasks
+  - VkGroupsTask - Fetch last posts from users subscriptions
 - utils
+  - concurrent
+    - UFuture - report about finished task and return value from another thread
   - USingleton
 - vendor
   - tgbot-cpp - Telegram Bot API library

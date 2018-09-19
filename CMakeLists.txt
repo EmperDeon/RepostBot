@@ -17,10 +17,15 @@ find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
 
 message(STATUS "Qt version: " ${Qt5_VERSION})
 
+
 include(cotire/CMake/cotire)
 add_subdirectory(vendor/tgbot-cpp)
 include_directories(vendor/tgbot-cpp/include)
+include_directories(vendor/)
 
+set(TEST_SOURCES
+        tests/TestCase.h tests/queue/QueueHelper.cpp tests/queue/QueueHelper.h tests/TestHelper.cpp tests/TestHelper.h
+        tests/queue/TestQueue1.cpp tests/queue/TestQueue1.h tests/queue/TestQueue2.cpp tests/queue/TestQueue2.h)
 
 add_executable(RepostBot
         interfaces/Threadable.h interfaces/Model.h interfaces/Model.cpp interfaces/Exporter.h interfaces/Importer.h interfaces/User.h
@@ -29,8 +34,13 @@ add_executable(RepostBot
         models/Post.h models/Post.cpp models/Error.cpp models/Error.h
 
         Storage.cpp Storage.h json.hpp Runner.cpp Runner.h
-        utils/USingleton.h main.cpp
+        utils/USingleton.h utils/concurrent/UFuture.h
 
+        queue/QueueManager.cpp queue/QueueManager.h queue/QueueTask.cpp queue/QueueTask.h queue/QueueHandler.h queue/QueueHandler.cpp
+
+        ${TEST_SOURCES}
+
+        main.cpp
         )
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)

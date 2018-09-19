@@ -20,6 +20,8 @@ public:
     virtual void sendTelegram(int64_t from, const TgBot::Api *api) {
         printf("Method sendTelegram has no realization!");
     };
+
+    virtual QString toString() { return ""; };
 };
 
 
