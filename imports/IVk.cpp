@@ -14,19 +14,40 @@
 #include <models/Post.h>
 #include <vars.h>
 #include <models/Error.h>
+#include <models/Status.h>
 #include "IVk.h"
 
-Model *IVk::getLastPost(std::string group_name) {
+void IVk::action(QueueTask *task) {
+    const QString &name = task->action;
+    const QStringList &params = task->params;
+
+    if (name == "getLastPost") {
+        getLastPost(task, params[0]);
+
+    } else if (name == "toggleSubscription") {
+        toggleSubscription(task, params[0], params[1] == "true");
+
+    } else if (name == "listSubscriptions") {
+        listSubscriptions(task);
+
+    } else {
+        qDebug() << "No such action: " << name;
+    }
+
+    emit manager->setAvailable(this);
+}
+
+void IVk::getLastPost(QueueTask *task, QString group_name) {
     nlohmann::json response, params;
 
-    if (group_name.empty()) {
-        return new Error("нет id группы");
+    if (group_name.isEmpty()) {
+        TASK_ERROR("нет id группы");
     }
 
     params = {{"count",    "2"},
               {"extended", "1"}};
 
-    if (isdigit(group_name[0])) { // If group_name starts with digit, it's id
+    if (group_name[0].isDigit()) { // If group_name starts with digit, it's id
         params["owner_id"] = "-" + group_name;
     } else {
         params["domain"] = group_name;
@@ -41,19 +62,66 @@ Model *IVk::getLastPost(std::string group_name) {
 
 
     if (response.has_key("error") || post.empty()) {
-        return new Error(response);
+        TASK_ERROR(response);
 
     } else if (is_pinned) { // If pinned
-        post = response["/response/items/0"_json_pointer];
+        post = response["/response/items/1"_json_pointer];
     }
 
 
-    return new Post({
-                            {"id",         post["id"]},
-                            {"text",       post["text"]},
-                            {"group_name", group["name"]},
-                            {"group_link", "https://vk.com/" + group_name}
-                    });
+    task->setResult(new Post({
+                                     {"id",         post["id"]},
+                                     {"text",       post["text"]},
+                                     {"group_name", group["name"]},
+                                     {"group_link", "https://vk.com/" + group_name}
+                             }));
+}
+
+void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
+    json &groups = Storage::instance()->value("vk.groups")[task->user.id];
+    json response = request("groups.getById", {{"group_id", group_name}});
+
+    if (response.has_key("error")) {
+        TASK_ERROR(response);
+    }
+
+    QString human_name = response["/response/0/name"_json_pointer];
+
+    if (!value) {
+        groups.eraseAllV(group_name);
+        task->setResult(new Status("Unsubscribed from group \"" + human_name + "\""));
+
+    } else if (!groups.has_value(group_name.toStdString())) {
+        groups += group_name;
+        task->setResult(new Status("Subscribed to group \"" + human_name + "\""));
+
+    } else {
+        TASK_ERROR("Already subscribed");
+    }
+}
+
+void IVk::listSubscriptions(QueueTask *task) {
+    json response, &groups = Storage::instance()->value("vk.groups")[task->user.id];
+    QStringList ids;
+
+    if (!groups.empty()) {
+        for (const QString &group : groups) ids << group;
+
+        response = request("groups.getById", {{"group_ids", ids.join(',')},
+                                              {"fields",    "name"}});
+
+        if (response.has_key("error")) {
+            TASK_ERROR(response.dumpQ(2));
+        }
+    }
+
+    ids.clear();
+    ids << "Subscriptions:";
+    for (const json &group : response["response"]) {
+        ids << group["name"].get<QString>() + " - " + group["screen_name"].get<QString>();
+    }
+
+    task->setResult(new Status(ids.join('\n')));
 }
 
 nlohmann::json IVk::request(const QString &method, const nlohmann::json &params) {
@@ -82,51 +150,4 @@ nlohmann::json IVk::request(const QString &method, const nlohmann::json &params)
     reply->deleteLater();
 
     return json;
-}
-
-std::string IVk::toggleSubscription(User user, std::string group_name, bool value) {
-    json &groups = Storage::instance()->value("vk.groups")[user.id];
-    json response = request("groups.getById", {{"group_id", group_name}});
-
-    if (response.has_key("error")) {
-        return "Group " + group_name + " not found";
-    }
-
-    std::string human_name = response["/response/0/name"_json_pointer];
-
-    if (!value) {
-        groups.eraseAllV(group_name);
-        return "Unsubscribed from group \"" + human_name + "\"";
-
-    } else if (!groups.has_value(group_name)) {
-        groups += group_name;
-        return "Subscribed to group \"" + human_name + "\"";
-
-    } else {
-        return "Already subscribed";
-    }
-}
-
-QString IVk::listSubscriptions(User user) {
-    json response, &groups = Storage::instance()->value("vk.groups")[user.id];
-    QStringList ids;
-
-    if (!groups.empty()) {
-        for (const QString &group : groups) ids << group;
-
-        response = request("groups.getById", {{"group_ids", ids.join(',')},
-                                              {"fields",    "name"}});
-
-        if (response.has_key("error")) {
-            return "Error:\n" + response.dumpQ(2);
-        }
-    }
-
-    ids.clear();
-    ids << "Subscriptions:";
-    for (const json &group : response["response"]) {
-        ids << group["name"].get<QString>() + " - " + group["screen_name"].get<QString>();
-    }
-
-    return ids.join('\n');
 }

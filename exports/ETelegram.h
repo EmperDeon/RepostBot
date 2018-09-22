@@ -10,6 +10,8 @@
 #include "interfaces/Exporter.h"
 #include "Storage.h"
 #include <tgbot/Bot.h>
+#include <queue/QueueTask.h>
+#include <queue/QueueManager.h>
 
 
 class ETelegramThread : public QThread {
@@ -22,13 +24,20 @@ public:
     void run() override;
 };
 
-class ETelegram : public Exporter {
+class ETelegram : public Exporter, public QObject {
     TgBot::Bot *bot;
     const TgBot::Api *api;
     TgBot::EventBroadcaster *events;
 
+    QueueManager *queue;
+    QList<QueueTask *> tasks;
+
 public:
     ETelegram();
+
+    void addVkTask(TgBot::Message::Ptr message, const char *action, QStringList params = {});
+
+    void handleFinished(QueueTask *task);
 
     QThread *createThread() override { return new ETelegramThread(bot, api); };
 

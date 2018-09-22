@@ -14,6 +14,8 @@
 #include "QueueManager.h"
 
 
+#define TASK_ERROR(s) task->setResult(new Error(s)); return
+
 class QueueManager;
 
 class QueueHandler : public QObject {
@@ -41,5 +43,6 @@ public /* signals */:
     virtual void action(QueueTask *task) = 0;
 };
 
+W_REGISTER_ARGTYPE(QueueHandler *)
 
 #endif //REPOSTBOT_QUEUEHANDLER_H

@@ -8,35 +8,27 @@
 #include <imports/IVk.h>
 #include "Runner.h"
 #include <QDebug>
+#include <tests/queue/TestQueue2.h>
 
 Runner::Runner() {
     storage = Storage::instance();
     storage->load();
+    manager = new QueueManager;
+}
+
+void Runner::start() {
+    handlers = {
+            new IVk
+    };
+
+    manager->addHandlers(handlers);
 
     exporters = {
             {"Telegram", new ETelegram}
     };
 
-    importers = {
-            {"VK", new IVk}
-    };
-}
-
-void Runner::start() {
     for (QString key : exporters.keys()) {
         auto value = exporters[key];
-
-        if (!value->isThreadable()) {
-            continue;
-        }
-
-        key = "E" + key;
-
-        threads[key] = value->createThread();
-    }
-
-    for (QString key : importers.keys()) {
-        auto value = importers[key];
 
         if (!value->isThreadable()) {
             continue;
@@ -50,4 +42,7 @@ void Runner::start() {
     for (QThread *thread : threads.values()) {
         thread->start();
     }
+
+//    TestQueue2 test;
+//    test.runTest();
 }

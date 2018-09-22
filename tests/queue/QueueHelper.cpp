@@ -5,7 +5,7 @@
 */
 #include "QueueHelper.h"
 #include <QDebug>
-#include <tests/TestHelper.h>
+#include <models/Status.h>
 
 void TestQueueHandler::action(QueueTask *task) {
     const QString &name = task->action;
@@ -23,15 +23,15 @@ void TestQueueHandler::action(QueueTask *task) {
         QThread::msleep(delay);
     }
 
-    manager->setAvailable(this);
+    emit manager->setAvailable(this);
 }
 
 void TestQueueHandler::test1(QueueTask *task, QString str) {
     str = QString("String - %1").arg(str);
-    task->setResult(new TestModel(str), true);
+    task->setResult(new Status(str), true);
 }
 
 void TestQueueHandler::test2(QueueTask *task, QString str, int i) {
     str = QString("String - %1, Int - %2").arg(str).arg(i);
-    task->setResult(new TestModel(str), true);
+    task->setResult(new Status(str), true);
 }

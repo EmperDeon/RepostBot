@@ -32,7 +32,7 @@ public:
         return finished;
     }
 
-    virtual void setResult(T _value, bool _finished = false) {
+    virtual void setResult(T _value, bool _finished = true) {
         QMutexLocker _lock(mutex);
 
         value = _value;

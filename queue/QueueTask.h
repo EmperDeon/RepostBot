@@ -32,7 +32,8 @@ public /* signals */:
 public:
     QueueTask() = default;
 
-    QueueTask(User _user, QString _action, QStringList _params) : action(std::move(_action)),
+    QueueTask(User _user, QString _action, QStringList _params) : user(std::move(_user)),
+                                                                  action(std::move(_action)),
                                                                   params(std::move(_params)) {}
 
     void setFinished(bool _finished) override {

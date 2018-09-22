@@ -16,6 +16,8 @@ struct User {
     User() = default;
 
     explicit User(int64_t telegram_id) : id(QString::number(telegram_id)) {}
+
+    int64_t toTg() const { return id.toLong(); }
 };
 
 #endif //REPOSTBOT_USER_H

@@ -9,6 +9,7 @@
 
 QueueManager::QueueManager() {
     mutex = new QMutex;
+    connect(this, &QueueManager::setAvailable, this, &QueueManager::handlerAvailable);
 }
 
 void QueueManager::addHandler(QueueHandler *handler) {
@@ -24,7 +25,7 @@ void QueueManager::addHandlers(QList<QueueHandler *> handlers) {
     }
 }
 
-void QueueManager::setAvailable(QueueHandler *handler) {
+void QueueManager::handlerAvailable(QueueHandler *handler) {
     QMutexLocker locker(mutex);
     QueueTask *task;
 
@@ -73,7 +74,7 @@ QueueTask *QueueManager::takeTask(QString handler_name) {
 }
 
 void QueueManager::startTask(QueueHandler *handler, QueueTask *task) {
-    QTimer::singleShot(1, [handler, task]() {
-        emit handler->handle(task);
-    });
+    emit handler->handle(task);
 }
+
+W_OBJECT_IMPL(QueueManager)

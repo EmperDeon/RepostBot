@@ -12,19 +12,23 @@
 #include <Storage.h>
 #include <interfaces/Exporter.h>
 #include <interfaces/Importer.h>
+#include <queue/QueueManager.h>
 
 
 class Runner : public QObject, public USingleton<Runner> {
     Storage *storage;
+    QueueManager *manager;
 
     QMap<QString, Exporter *> exporters;
-    QMap<QString, Importer *> importers;
+    QList<QueueHandler *> handlers;
     QMap<QString, QThread *> threads;
 
 public:
     Runner();
 
     void start();
+
+    QueueManager *queue() const { return manager; }
 };
 
 

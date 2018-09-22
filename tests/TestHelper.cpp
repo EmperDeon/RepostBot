@@ -5,9 +5,3 @@
 */
 #include "TestHelper.h"
 
-TestModel::TestModel(const QString &s) : string(s) {}
-
-QString TestModel::toString() {
-    return string;
-}
-

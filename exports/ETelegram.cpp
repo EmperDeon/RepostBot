@@ -8,6 +8,7 @@
 #include <tgbot/Bot.h>
 #include <tgbot/net/TgLongPoll.h>
 #include <tgbot/TgException.h>
+#include "Runner.h"
 #include "ETelegram.h"
 #include "imports/IVk.h"
 #include "../vars.h"
@@ -32,44 +33,70 @@ void ETelegramThread::run() {
 }
 
 ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()), events(&bot->getEvents()) {
+    queue = Runner::instance()->queue();
+
     events->onCommand("start", [this](TgBot::Message::Ptr message) {
         this->api->sendMessage(message->chat->id, "Hi!");
     });
 
     events->onCommand("get_last_post", [this](TgBot::Message::Ptr message) {
-        std::vector<std::string> parts;
-        StringTools::split(message->text, ' ', parts);
+        QStringList parts = QString::fromStdString(message->text).split(' ');
 
-        auto *model = IVk::getLastPost(parts[1]);
-        model->sendTelegram(message->chat->id, this->api);
-        delete model;
+        addVkTask(message, "getLastPost", {parts[1]});
     });
 
     events->onCommand("subscribe", [this](TgBot::Message::Ptr message) {
-        std::vector<std::string> parts;
-        StringTools::split(message->text, ' ', parts);
+        QStringList parts = QString::fromStdString(message->text).split(' ');
 
-        std::string response = IVk::toggleSubscription(User(message->chat->id), parts[1], true);
-        this->api->sendMessage(message->chat->id, response);
+        if (parts.size() == 1) {
+            parts << "1";
+        }
+
+        addVkTask(message, "toggleSubscription", {parts[1], "true"});
     });
 
     events->onCommand("unsubscribe", [this](TgBot::Message::Ptr message) {
-        std::vector<std::string> parts;
-        StringTools::split(message->text, ' ', parts);
+        QStringList parts = QString::fromStdString(message->text).split(' ');
 
-        std::string response = IVk::toggleSubscription(User(message->chat->id), parts[1], false);
-        this->api->sendMessage(message->chat->id, response);
+        if (parts.size() == 1) {
+            parts << "1";
+        }
+
+        addVkTask(message, "toggleSubscription", {parts[1], "false"});
     });
 
     events->onCommand("list_subscriptions", [this](TgBot::Message::Ptr message) {
-        QString groups = IVk::listSubscriptions(User(message->chat->id));
-        this->api->sendMessage(message->chat->id, groups.toStdString());
+        addVkTask(message, "listSubscriptions");
     });
 
     events->onCommand("export", [this](TgBot::Message::Ptr message) {
         // Send list of commands to execute/json to import.
         // Json will be better i think
     });
+}
+
+void ETelegram::addVkTask(TgBot::Message::Ptr message, const char *action, QStringList params) {
+    auto *task = new QueueTask(User(message->chat->id), action, params);
+
+    tasks << task;
+    connect(task, &QueueTask::hasFinished, this, &ETelegram::handleFinished);
+
+    queue->addTask(IVk::className(), task);
+}
+
+void ETelegram::handleFinished(QueueTask *task) {
+    const QString &name = task->action;
+    const User &user = task->user;
+    Model *result = task->result();
+
+    if (name == "getLastPost" || name == "toggleSubscription" || name == "listSubscriptions") {
+        result->sendTelegram(user.toTg(), this->api);
+
+    } else {
+        qDebug() << "No such Telegram handler for action: " << name;
+    }
+
+    delete result;
 }
 
 // @BotFather commands

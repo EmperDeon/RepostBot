@@ -17,7 +17,9 @@
 
 class QueueHandler;
 
-class QueueManager {
+class QueueManager : public QObject {
+    W_OBJECT(QueueManager)
+
     QMutex *mutex;
 
     QMap<QString, QList<QueueHandler *>> handlers, available_handlers;
@@ -26,21 +28,23 @@ class QueueManager {
 public:
     QueueManager();
 
+    // For handlers - adds handler to available list
+    void setAvailable(QueueHandler *handler) W_SIGNAL(setAvailable, handler)
+
     // For Runner
     void addHandler(QueueHandler *handler);
 
     void addHandlers(QList<QueueHandler *> handlers);
 
 
-    // For handlers - adds handler to available list
-    void setAvailable(QueueHandler *handler);
-
 
     // For task creators - takes first available handler and gives it to him
     void addTask(QString handler_name, QueueTask *task, bool low_priority = true);
 
 
-    // Internal
+protected:
+    void handlerAvailable(QueueHandler *handler);
+
     QueueHandler *takeAvailable(QString handler_name);
 
     QueueTask *takeTask(QString handler_name);

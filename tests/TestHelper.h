@@ -6,17 +6,6 @@
 #ifndef REPOSTBOT_TESTHELPER_H
 #define REPOSTBOT_TESTHELPER_H
 
-#include <interfaces/Model.h>
-
-
-class TestModel : public Model {
-    QString string;
-
-public:
-    explicit TestModel(const QString &s);
-
-    QString toString() override;
-};
 
 
 #endif //REPOSTBOT_TESTHELPER_H

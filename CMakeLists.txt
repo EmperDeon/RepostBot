@@ -41,7 +41,7 @@ add_executable(RepostBot
         ${TEST_SOURCES}
 
         main.cpp
-        )
+        models/Status.cpp models/Status.h)
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
 target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot ssl crypto)
