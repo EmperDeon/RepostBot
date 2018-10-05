@@ -8,7 +8,8 @@
 #include <imports/IVk.h>
 #include "Runner.h"
 #include <QDebug>
-#include <tests/queue/TestQueue2.h>
+#include <tasks/vk/PostsVkTask.h>
+#include <tests/TestUtils.h>
 
 Runner::Runner() {
     storage = Storage::instance();
@@ -17,14 +18,18 @@ Runner::Runner() {
 }
 
 void Runner::start() {
+    tasks_manager = new TaskManager;
+
     handlers = {
             new IVk
     };
 
     manager->addHandlers(handlers);
 
+    e_telegram = new ETelegram;
+
     exporters = {
-            {"Telegram", new ETelegram}
+            {"Telegram", e_telegram}
     };
 
     for (QString key : exporters.keys()) {
@@ -43,6 +48,8 @@ void Runner::start() {
         thread->start();
     }
 
-//    TestQueue2 test;
+    tasks_manager->start();
+
+//    TestUtils test;
 //    test.runTest();
 }

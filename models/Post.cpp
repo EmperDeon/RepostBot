@@ -7,15 +7,15 @@
 #include "Post.h"
 
 Post::Post(const nlohmann::json &obj) {
-    id = QString::number(obj["id"].get<int>());
+    model_id = QString::number(obj["id"].get<int>());
     text = obj["text"].get<QString>();
     group_name = obj["group_name"].get<QString>();
     group_link = obj["group_link"].get<QString>();
 
 }
 
-void Post::sendTelegram(int64_t from, const TgBot::Api *api) {
-    api->sendMessage(from, toText().toStdString(), false, 0, std::make_shared<TgBot::GenericReply>(), "Markdown");
+void Post::sendTelegram(int64_t from, ETelegram *tg, bool silent) {
+    tg->sendMessage(from, toText(), silent);
 }
 
 QString Post::toText() {

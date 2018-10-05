@@ -22,7 +22,12 @@ void IVk::action(QueueTask *task) {
     const QStringList &params = task->params;
 
     if (name == "getLastPost") {
-        getLastPost(task, params[0]);
+        if (params.size() > 1) {
+            getLastPost(task, params[0], params[1]);
+
+        } else {
+            getLastPost(task, params[0]);
+        }
 
     } else if (name == "toggleSubscription") {
         toggleSubscription(task, params[0], params[1] == "true");
@@ -37,11 +42,11 @@ void IVk::action(QueueTask *task) {
     emit manager->setAvailable(this);
 }
 
-void IVk::getLastPost(QueueTask *task, QString group_name) {
+void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id) {
     nlohmann::json response, params;
 
-    if (group_name.isEmpty()) {
-        TASK_ERROR("нет id группы");
+    if (group_name.isEmpty() || group_name == "null") {
+        TASK_ERROR("no group id");
     }
 
     params = {{"count",    "2"},
@@ -68,18 +73,26 @@ void IVk::getLastPost(QueueTask *task, QString group_name) {
         post = response["/response/items/1"_json_pointer];
     }
 
+    if (QString::number(post["id"].get<int>()) == last_post_id) {
+        task->setResult(new Post);
 
-    task->setResult(new Post({
-                                     {"id",         post["id"]},
-                                     {"text",       post["text"]},
-                                     {"group_name", group["name"]},
-                                     {"group_link", "https://vk.com/" + group_name}
-                             }));
+    } else {
+        task->setResult(new Post({
+                                         {"id",         post["id"]},
+                                         {"text",       post["text"]},
+                                         {"group_name", group["name"]},
+                                         {"group_link", "https://vk.com/" + group_name}
+                                 }));
+    }
 }
 
 void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
-    json &groups = Storage::instance()->value("vk.groups")[task->user.id];
+    json &groups = storage()[task->user.id];
     json response = request("groups.getById", {{"group_id", group_name}});
+
+    if (group_name.isEmpty() || group_name == "null") {
+        TASK_ERROR("no group id");
+    }
 
     if (response.has_key("error")) {
         TASK_ERROR(response);
@@ -98,10 +111,12 @@ void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool va
     } else {
         TASK_ERROR("Already subscribed");
     }
+
+    Storage::instance()->save();
 }
 
 void IVk::listSubscriptions(QueueTask *task) {
-    json response, &groups = Storage::instance()->value("vk.groups")[task->user.id];
+    json response, &groups = storage()[task->user.id];
     QStringList ids;
 
     if (!groups.empty()) {
@@ -118,7 +133,8 @@ void IVk::listSubscriptions(QueueTask *task) {
     ids.clear();
     ids << "Subscriptions:";
     for (const json &group : response["response"]) {
-        ids << group["name"].get<QString>() + " - " + group["screen_name"].get<QString>();
+        QString s("%1 - %2");
+        ids << s.arg(group["name"].get<QString>()).arg(group["screen_name"].get<QString>()).replace("_", "\\_");
     }
 
     task->setResult(new Status(ids.join('\n')));

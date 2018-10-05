@@ -15,6 +15,9 @@
 #include <utils/concurrent/UFuture.h>
 #include <QDebug>
 
+
+class Model;
+
 /*
  * Stores information about user/chat, action and parameters
  */

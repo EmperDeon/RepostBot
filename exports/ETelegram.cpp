@@ -8,6 +8,8 @@
 #include <tgbot/Bot.h>
 #include <tgbot/net/TgLongPoll.h>
 #include <tgbot/TgException.h>
+#include <utils/Utils.h>
+#include <tasks/vk/PostsVkTask.h>
 #include "Runner.h"
 #include "ETelegram.h"
 #include "imports/IVk.h"
@@ -22,7 +24,6 @@ void ETelegramThread::run() {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
         while (true) {
-            printf("Long poll started\n");
             longPoll.start();
         }
 #pragma clang diagnostic pop
@@ -42,6 +43,10 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
     events->onCommand("get_last_post", [this](TgBot::Message::Ptr message) {
         QStringList parts = QString::fromStdString(message->text).split(' ');
 
+        if (parts.size() == 1) {
+            parts << "null";
+        }
+
         addVkTask(message, "getLastPost", {parts[1]});
     });
 
@@ -49,7 +54,7 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
         QStringList parts = QString::fromStdString(message->text).split(' ');
 
         if (parts.size() == 1) {
-            parts << "1";
+            parts << "null";
         }
 
         addVkTask(message, "toggleSubscription", {parts[1], "true"});
@@ -59,7 +64,7 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
         QStringList parts = QString::fromStdString(message->text).split(' ');
 
         if (parts.size() == 1) {
-            parts << "1";
+            parts << "null";
         }
 
         addVkTask(message, "toggleSubscription", {parts[1], "false"});
@@ -73,6 +78,16 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
         // Send list of commands to execute/json to import.
         // Json will be better i think
     });
+
+    events->onAnyMessage([this](TgBot::Message::Ptr message) {
+        qDebug() << "Received message: " << message->text.c_str();
+    });
+
+#ifdef DEBUG
+    events->onCommand("forceUpdateVkTask", [this](TgBot::Message::Ptr message) {
+        Runner::instance()->tasks()->forceLaunch(PostsVkTask().id());
+    });
+#endif
 }
 
 void ETelegram::addVkTask(TgBot::Message::Ptr message, const char *action, QStringList params) {
@@ -90,13 +105,28 @@ void ETelegram::handleFinished(QueueTask *task) {
     Model *result = task->result();
 
     if (name == "getLastPost" || name == "toggleSubscription" || name == "listSubscriptions") {
-        result->sendTelegram(user.toTg(), this->api);
+        result->sendTelegram(user.toTg(), this);
 
     } else {
-        qDebug() << "No such Telegram handler for action: " << name;
+        qDebug() << "No handler in Telegram for action: " << name;
     }
 
     delete result;
+    delete task;
+}
+
+void ETelegram::sendMessage(int64_t to, const QString &message, bool silent) {
+    QStringList messages = Utils::splitMessageTo(message, 4096);
+
+    for (const QString &split_message : messages) {
+        try {
+            api->sendMessage(to, split_message.toStdString(), false, 0, std::make_shared<TgBot::GenericReply>(),
+                             "Markdown",
+                             silent);
+        } catch (TgBot::TgException &e) {
+            printf("error: %s\n", e.what());
+        }
+    }
 }
 
 // @BotFather commands

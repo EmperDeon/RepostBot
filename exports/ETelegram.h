@@ -39,6 +39,8 @@ public:
 
     void handleFinished(QueueTask *task);
 
+    void sendMessage(int64_t to, const QString &message, bool silent = false);
+
     QThread *createThread() override { return new ETelegramThread(bot, api); };
 
     bool isThreadable() override { return true; };

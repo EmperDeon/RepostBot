@@ -7,6 +7,7 @@
 #include <QtCore/QFile>
 #include "Storage.h"
 #include "vars.h"
+#include <QDebug>
 
 void Storage::load() {
     QFile f(STORAGE_FILE);
@@ -20,10 +21,10 @@ void Storage::save() {
     QFile f(STORAGE_FILE);
 
     if (f.open(QFile::WriteOnly)) {
-        f.write(object.dumpQ().toUtf8());
+        f.write(object.dumpQ(4).toUtf8());
+    } else {
+        qDebug() << f.errorString();
     }
-
-    printf("Closing");
 
     f.close();
 }

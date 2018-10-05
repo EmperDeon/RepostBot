@@ -16,9 +16,9 @@ class Status : public Model {
 public:
     explicit Status(const QString &s) : string(s) {}
 
-    void sendTelegram(int64_t from, const TgBot::Api *api) override;
+    void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) override;
 
-    QString toString() override { return string; }
+    QString toString() const override { return string; }
 };
 
 

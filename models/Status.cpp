@@ -5,6 +5,6 @@
 */
 #include "Status.h"
 
-void Status::sendTelegram(int64_t from, const TgBot::Api *api) {
-    api->sendMessage(from, string.toStdString());
+void Status::sendTelegram(int64_t from, ETelegram *tg, bool silent) {
+    tg->sendMessage(from, string, silent);
 }

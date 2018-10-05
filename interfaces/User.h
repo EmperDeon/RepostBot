@@ -15,9 +15,16 @@ struct User {
 
     User() = default;
 
-    explicit User(int64_t telegram_id) : id(QString::number(telegram_id)) {}
+    explicit User(const QString &_id) : id(_id) {}
 
-    int64_t toTg() const { return id.toLong(); }
+    explicit User(int64_t telegram_id) : id("T" + QString::number(telegram_id)) {}
+
+    bool isTelegram() const { return id.startsWith('T'); }
+
+    int64_t toTg() const {
+        QString t_id = id;
+        return t_id.remove(0, 1).toLong();
+    }
 };
 
 #endif //REPOSTBOT_USER_H

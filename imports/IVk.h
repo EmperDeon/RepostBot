@@ -22,9 +22,14 @@ public:
 
     QString name() override { return className(); }
 
+    json &storage() { return Storage::instance()->value("vk.groups"); };
+
     void action(QueueTask *task) override;
 
-    void getLastPost(QueueTask *task, QString group_name);
+    // Get last post from group
+    //
+    // Returns Post without id if post_id is same as last
+    void getLastPost(QueueTask *task, QString group_name, QString last_post_id = "");
 
     // Toggle subscription for user
     //

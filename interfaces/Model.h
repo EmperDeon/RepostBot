@@ -10,18 +10,36 @@
 #include <tgbot/Api.h>
 #include <QtCore/QString>
 #include <json.hpp>
+#include <queue/QueueTask.h>
+#include <Runner.h>
+#include <exports/ETelegram.h>
+#include "User.h"
 
+
+class QueueTask;
 
 class Model {
 protected:
-    QString id;
+    QString model_id;
 
 public:
-    virtual void sendTelegram(int64_t from, const TgBot::Api *api) {
+    virtual bool empty() { return model_id.isEmpty(); }
+
+    virtual void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) {
         printf("Method sendTelegram has no realization!");
     };
 
-    virtual QString toString() { return ""; };
+    virtual void sendTo(const User &user, bool silent = false) {
+        if (user.isTelegram()) {
+            sendTelegram(user.toTg(), Runner::instance()->telegram(), silent);
+        } else {
+            puts("Unsupported User\n");
+        }
+    }
+
+    QString id() const { return model_id; }
+
+    virtual QString toString() const { return ""; };
 };
 
 

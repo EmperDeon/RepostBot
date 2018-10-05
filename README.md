@@ -6,73 +6,107 @@ Telegram (or maybe other messengers later) bot for reposting messages/posts from
 ## Current project
 
 - Telegram subscribe bot (Export)
-- VK group posts import (Import)
+- VK wall posts import (Import)
+
+
+## Sites that will maybe supported in future
+
+- Matrix(Riot) subscribe bot
+- VK subscribe bot
+
+- Telegram channel posts import
+- Bash.im, ITHappens.me, Zadolba.li
+- RSS feeds
+- xkcd.com
+- rtut.io
+- pikabu.ru
 
 
 ## File structure
-- interfaces
-  - Threadable
-  - Exporter
-  - Importer
-  - Model
-  - User - Abstraction for storing user ids
 - exports
   - ETelegram - Telegram bot
 - imports
-  - IVK - Get group posts
+  - IVk - VK API
+- interfaces
+  - Exporter
+  - Importer
+  - Model
+  - Task
+  - Threadable
+  - User - Abstraction for storing user ids
 - models
   - Error
   - Post
+  - Status
 - queue
+  - QueueHandler - Interface
   - QueueManager
   - QueueTask
 - tasks
-  - Tasker - create and manage tasks
-  - VkGroupsTask - Fetch last posts from users subscriptions
+  - TaskManager - create and manage tasks
+  - vk
+    - PostsVkTask - Fetch last posts from users subscriptions
+- tests - Temporary storage for test code, before i learn any testing framework
 - utils
   - concurrent
     - UFuture - report about finished task and return value from another thread
   - USingleton
+  - Utils
 - vendor
   - tgbot-cpp - Telegram Bot API library
+  - cotire - Unity builds
+  - verdigris - Replacement for MOC (Needed for unity builds)
+- Runner - keeper of threads,
 - Storage - json storage
 - vars - secure variables: tokens, etc.
 - vars.h.example - template for secure variables
-- Runner - keeper of threads
 - main
 
 
 ## Storage
 
-I think permanent storage of posts isn't needed, so i will store them in memory, and delete after send if finished.
+I think permanent storage of posts isn't needed, so i will store them in memory, and delete after send is finished.
 
 ```json
 {
-  "import.vk": { - Import/Export variables
-    "token": "<token>"
-  },
-  "export.telegram": {
-  },
-  "vk.groups": {
-    "<user_uid>": [
-      "<group_id 1>",
-      "<group_id 2>",
-      "<group_id 3>"
-    ]
-  }
+    "task.vk.posts": {
+        "last_ids": {
+            "<group_id>": "<last_post_id>"
+        }
+    },
+    "tasks": {
+        "last_launched": {
+            "task.vk.posts": <last_successfull_launch_timestamp>
+        }
+    },
+    "vk.groups": {
+        "<user_id>": [
+            "<group_name_1>",
+            "<group_name_2>",
+            "<group_name_3>"
+        ]
+    }
 }
 ```
 
 
+## Tasks - Users
+
+`User` is universal user_id storage. Each bot should have separate constructor and add prefix to id, for methods like `isTelegram` to work. Model method `sendTo(User)` decides to which `Export` send itself, and will add task for it.
+
+
 ## TODO
 
-Vk thread code (fetch last post from all subscribed groups)
-Save Storage on write
+Vk:
+  - download photo (1280 or less)
+  - fetch not last but all unread (except for new groups)
+Rename and move vk and telegram to `api` folder (Terms Exporter and Importer aren't suitable)
+  - separate to `threads`, `bots` and `handlers` folders
 
 
 # Conventions
 
-In any method with writing to Storage should call save after last write or at end of function
+Any method that writes to Storage should call save after last write or at end of function
 
 
 #### Singletons

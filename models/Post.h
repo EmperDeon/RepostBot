@@ -21,7 +21,7 @@ public:
 
     QString toText();
 
-    void sendTelegram(int64_t from, const TgBot::Api *api) override;
+    void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) override;
 };
 
 #endif //REPOSTBOT_POST_H

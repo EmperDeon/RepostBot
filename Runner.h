@@ -13,11 +13,17 @@
 #include <interfaces/Exporter.h>
 #include <interfaces/Importer.h>
 #include <queue/QueueManager.h>
+#include <tasks/TaskManager.h>
 
+
+class ETelegram;
 
 class Runner : public QObject, public USingleton<Runner> {
     Storage *storage;
     QueueManager *manager;
+    TaskManager *tasks_manager;
+
+    ETelegram *e_telegram;
 
     QMap<QString, Exporter *> exporters;
     QList<QueueHandler *> handlers;
@@ -29,6 +35,10 @@ public:
     void start();
 
     QueueManager *queue() const { return manager; }
+
+    TaskManager *tasks() const { return tasks_manager; }
+
+    ETelegram *telegram() const { return e_telegram; }
 };
 
 
