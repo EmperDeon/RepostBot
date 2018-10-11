@@ -12,7 +12,10 @@
 #include <tgbot/Bot.h>
 #include <queue/QueueTask.h>
 #include <queue/QueueManager.h>
+#include <models/Attachment.h>
 
+
+class QueueTask;
 
 class ETelegramThread : public QThread {
     const TgBot::Bot *bot;
@@ -40,6 +43,8 @@ public:
     void handleFinished(QueueTask *task);
 
     void sendMessage(int64_t to, const QString &message, bool silent = false);
+
+    void sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments);
 
     QThread *createThread() override { return new ETelegramThread(bot, api); };
 

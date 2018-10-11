@@ -21,7 +21,7 @@ public:
 
     explicit Error(const nlohmann::json &obj);
 
-    void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) override;
+    QString toString() const override { return error; }
 };
 
 

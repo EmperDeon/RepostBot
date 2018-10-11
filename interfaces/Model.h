@@ -7,41 +7,36 @@
 #ifndef REPOSTBOT_MODEL_H
 #define REPOSTBOT_MODEL_H
 
-#include <tgbot/Api.h>
 #include <QtCore/QString>
 #include <json.hpp>
-#include <queue/QueueTask.h>
-#include <Runner.h>
 #include <exports/ETelegram.h>
 #include "User.h"
+#include "models/Attachment.h"
 
 
 class QueueTask;
 
+class Attachment;
+
 class Model {
 protected:
     QString model_id;
+    QList<Attachment *> attachments;
 
 public:
-    virtual bool empty() { return model_id.isEmpty(); }
-
-    virtual void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) {
-        printf("Method sendTelegram has no realization!");
-    };
-
-    virtual void sendTo(const User &user, bool silent = false) {
-        if (user.isTelegram()) {
-            sendTelegram(user.toTg(), Runner::instance()->telegram(), silent);
-        } else {
-            puts("Unsupported User\n");
-        }
-    }
-
+    // Getters/Setters
     QString id() const { return model_id; }
 
+    // Text to send through messenger
     virtual QString toString() const { return ""; };
-};
 
+    virtual bool empty() { return model_id.isEmpty(); }
+
+    void setAttachments(const QList<Attachment *> &list) { attachments = list; }
+
+    // Sending
+    virtual void sendTo(const User &user, bool silent = false);
+};
 
 void from_json(const nlohmann::json &j, QString &p);
 

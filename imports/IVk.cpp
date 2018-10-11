@@ -56,7 +56,6 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
         params["owner_id"] = "-" + group_name;
     } else {
         params["domain"] = group_name;
-        group_name = "public" + group_name;
     }
 
     response = request("wall.get", params);
@@ -73,17 +72,25 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
         post = response["/response/items/1"_json_pointer];
     }
 
+    Model *model;
+
     if (QString::number(post["id"].get<int>()) == last_post_id) {
-        task->setResult(new Post);
+        model = new Post;
 
     } else {
-        task->setResult(new Post({
-                                         {"id",         post["id"]},
-                                         {"text",       post["text"]},
-                                         {"group_name", group["name"]},
-                                         {"group_link", "https://vk.com/" + group_name}
-                                 }));
+        model = new Post({
+                                 {"id",         post["id"]},
+                                 {"text",       post["text"]},
+                                 {"group_name", group["name"]},
+                                 {"group_link", "https://vk.com/public" + QString::number(group["id"].get<int>())},
+                                 {"wall_link",  "https://vk.com/wall-" + QString::number(group["id"].get<int>()) + '_' +
+                                                QString::number(post["id"].get<int>())}
+                         });
+
+        model->setAttachments(parseAttachments(post));
     }
+
+    task->setResult(model);
 }
 
 void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
@@ -166,4 +173,28 @@ nlohmann::json IVk::request(const QString &method, const nlohmann::json &params)
     reply->deleteLater();
 
     return json;
+}
+
+QList<Attachment *> IVk::parseAttachments(const json &thing) {
+    QList<Attachment *> r;
+
+    if (!thing.has_key("attachments")) {
+        return r;
+    }
+
+    for (const json &attachment : thing["attachments"]) {
+        QString type = attachment["type"].get<QString>(QString());
+
+        if (type == "photo") {
+            r << new Attachment(type, attachment["/photo/sizes"_json_pointer].back()["url"].get<QString>());
+
+        } else if (type == "video") {
+        } else if (type == "poll") {
+        } else {
+            qDebug() << "Type " << type << "is not supported by IVk::parseAttachment";
+            qDebug() << attachment.dumpQ(2);
+        }
+    }
+
+    return r;
 }

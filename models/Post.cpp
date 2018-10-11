@@ -11,13 +11,9 @@ Post::Post(const nlohmann::json &obj) {
     text = obj["text"].get<QString>();
     group_name = obj["group_name"].get<QString>();
     group_link = obj["group_link"].get<QString>();
-
+    wall_link = obj["wall_link"].get<QString>();
 }
 
-void Post::sendTelegram(int64_t from, ETelegram *tg, bool silent) {
-    tg->sendMessage(from, toText(), silent);
-}
-
-QString Post::toText() {
-    return QString("[%1](%2)\n\n%3").arg(group_name).arg(group_link).arg(text);
+QString Post::toString() const {
+    return QString("[%1](%2) - [Wall](%3) \n\n%4").arg(group_name).arg(group_link).arg(wall_link).arg(text);
 }

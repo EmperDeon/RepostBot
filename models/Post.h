@@ -11,7 +11,7 @@
 
 
 class Post : public Model {
-    QString group_name, group_link;
+    QString group_name, group_link, wall_link;
     QString text;
 
 public:
@@ -19,9 +19,7 @@ public:
 
     explicit Post(const nlohmann::json &obj);
 
-    QString toText();
-
-    void sendTelegram(int64_t from, ETelegram *tg, bool silent = false) override;
+    QString toString() const override;
 };
 
 #endif //REPOSTBOT_POST_H

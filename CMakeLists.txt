@@ -29,13 +29,14 @@ include_directories(vendor/)
 set(TEST_SOURCES
         tests/TestCase.h tests/queue/QueueHelper.cpp tests/queue/QueueHelper.h tests/TestHelper.cpp tests/TestHelper.h
         tests/queue/TestQueue1.cpp tests/queue/TestQueue1.h tests/queue/TestQueue2.cpp tests/queue/TestQueue2.h
-        tests/TestUtils.cpp tests/TestUtils.h)
+        tests/TestUtils.cpp tests/TestUtils.h tests/TestAttachment.cpp tests/TestAttachment.h
+        )
 
 add_executable(RepostBot
         interfaces/Threadable.h interfaces/Model.h interfaces/Model.cpp interfaces/Exporter.h interfaces/Importer.h interfaces/User.h interfaces/Task.h
         exports/ETelegram.cpp exports/ETelegram.h
         imports/IVk.cpp imports/IVk.h vars.h
-        models/Post.h models/Post.cpp models/Error.cpp models/Error.h models/Status.cpp models/Status.h
+        models/Attachment.cpp models/Post.h models/Post.cpp models/Error.cpp models/Error.h models/Status.cpp models/Status.h
 
         Storage.cpp Storage.h json.hpp Runner.cpp Runner.h
         utils/USingleton.h utils/concurrent/UFuture.h
@@ -49,7 +50,7 @@ add_executable(RepostBot
 
         ${TEST_SOURCES}
 
-        main.cpp)
+        main.cpp models/Attachment.h)
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
 target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot ssl crypto)

@@ -19,18 +19,25 @@
 void ETelegramThread::run() {
     try {
         printf("Bot username: %s\n", api->getMe()->username.c_str());
-        TgBot::TgLongPoll longPoll(*bot);
+    } catch (boost::system::system_error const &e) {
+        printf("Boost Error: %s\n", e.what());
+        return;
+    }
+
+    TgBot::TgLongPoll longPoll(*bot);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-        while (true) {
+    while (true) {
+        try {
             longPoll.start();
+        } catch (TgBot::TgException &e) {
+            printf("Telegram Error: %s\n", e.what());
+        } catch (boost::system::system_error const &e) {
+            printf("Boost Error: %s\n", e.what());
         }
-#pragma clang diagnostic pop
-
-    } catch (TgBot::TgException &e) {
-        printf("error: %s\n", e.what());
     }
+#pragma clang diagnostic pop
 }
 
 ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()), events(&bot->getEvents()) {
@@ -105,7 +112,7 @@ void ETelegram::handleFinished(QueueTask *task) {
     Model *result = task->result();
 
     if (name == "getLastPost" || name == "toggleSubscription" || name == "listSubscriptions") {
-        result->sendTelegram(user.toTg(), this);
+        result->sendTo(user);
 
     } else {
         qDebug() << "No handler in Telegram for action: " << name;
@@ -127,6 +134,10 @@ void ETelegram::sendMessage(int64_t to, const QString &message, bool silent) {
             printf("error: %s\n", e.what());
         }
     }
+}
+
+void ETelegram::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments) {
+    api->sendMediaGroup(user, attachments);
 }
 
 // @BotFather commands

@@ -41,6 +41,11 @@ public:
     // Returns human names of groups
     void listSubscriptions(QueueTask *task);
 
+    // Parse attachments from json
+    //
+    // Returns list of attachments
+    QList<Attachment *> parseAttachments(const json &thing);
+
 protected:
     nlohmann::json request(const QString &method, const nlohmann::json &params = {});
 };

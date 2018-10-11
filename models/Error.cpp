@@ -13,7 +13,3 @@ Error::Error(const QString &_text) : error(_text) {}
 Error::Error(const nlohmann::json &obj) {
     error = "Ошибка: \n" + obj.dumpQ(2);
 }
-
-void Error::sendTelegram(int64_t from, ETelegram *tg, bool silent) {
-    tg->sendMessage(from, error, silent);
-}
