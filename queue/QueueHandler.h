@@ -15,6 +15,7 @@
 
 
 #define TASK_ERROR(s) task->setResult(new Error(s)); return
+#define TASK_STATUS(s) task->setResult(new Status(s)); return
 
 class QueueManager;
 

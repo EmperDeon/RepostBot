@@ -11,10 +11,16 @@
 #define STORAGE_FILE "~/.config/RepostBot/config.json"
 
 // Create bot through @BotFather
-#define TELEGRAM_TOKEN "<Telegram token>"
+#define TELEGRAM_TOKEN "< Telegram token >"
 
-// https://oauth.vk.com/authorize?client_id=5135481&scope=offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&v=5.84&response_type=token
-#define VK_TOKEN "<VK token>"
+#define VK_TOKEN "< VK token >"
+
+
+#define VK_AUTH_ID "< VK App id >"
+#define VK_AUTH_SECRET "< VK App secret >"
+
+// If App url is present, App will receive code right after authorization(auth page will redirect to url), and no need for sending instructions about it
+#define VK_AUTH_URL "https://oauth.vk.com/blank.html"
 
 
 #endif //REPOSTBOT_VARS_H

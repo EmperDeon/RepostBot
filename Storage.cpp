@@ -21,7 +21,7 @@ void Storage::save() {
     QFile f(STORAGE_FILE);
 
     if (f.open(QFile::WriteOnly)) {
-        f.write(object.dumpQ(4).toUtf8());
+        f.write(Storage::instance()->object.dumpQ(4).toUtf8());
     } else {
         qDebug() << f.errorString();
     }

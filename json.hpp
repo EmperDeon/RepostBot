@@ -17250,7 +17250,7 @@ Format](http://rfc7159.net/rfc7159)
         }
 
         bool has_key(const QString &k) const {
-            if (!is_object()) throw ("has_key called on non-object json");
+            if (!is_object() && !is_null()) throw std::runtime_error("has_key called on non-object json");
 
             return find(k.toStdString()) != end();
         }

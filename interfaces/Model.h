@@ -35,7 +35,7 @@ public:
     void setAttachments(const QList<Attachment *> &list) { attachments = list; }
 
     // Sending
-    virtual void sendTo(const User &user, bool silent = false);
+    virtual void sendTo(const User &user);
 };
 
 void from_json(const nlohmann::json &j, QString &p);

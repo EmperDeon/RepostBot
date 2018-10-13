@@ -43,42 +43,47 @@ void ETelegramThread::run() {
 ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()), events(&bot->getEvents()) {
     queue = Runner::instance()->queue();
 
-    events->onCommand("start", [this](TgBot::Message::Ptr message) {
-        this->api->sendMessage(message->chat->id, "Hi!");
+    //
+    // Authorization
+    //
+
+    events->onCommand({"vk_login", "vk_logout"}, [this](TgBot::Message::Ptr message) {
+        addVkTask(message, "toggleAuth", {(message->text == "/vk_login" ? "true" : "false")});
     });
 
-    events->onCommand("get_last_post", [this](TgBot::Message::Ptr message) {
-        QStringList parts = QString::fromStdString(message->text).split(' ');
-
-        if (parts.size() == 1) {
-            parts << "null";
-        }
-
-        addVkTask(message, "getLastPost", {parts[1]});
+    events->onCommand("vk_set_code", [this](TgBot::Message::Ptr message) {
+        addVkTask(message, "setAuthCode", {part_at(message, 1)});
     });
 
-    events->onCommand("subscribe", [this](TgBot::Message::Ptr message) {
-        QStringList parts = QString::fromStdString(message->text).split(' ');
+    //
+    // Subscription
+    //
 
-        if (parts.size() == 1) {
-            parts << "null";
-        }
-
-        addVkTask(message, "toggleSubscription", {parts[1], "true"});
-    });
-
-    events->onCommand("unsubscribe", [this](TgBot::Message::Ptr message) {
-        QStringList parts = QString::fromStdString(message->text).split(' ');
-
-        if (parts.size() == 1) {
-            parts << "null";
-        }
-
-        addVkTask(message, "toggleSubscription", {parts[1], "false"});
+    events->onCommand({"subscribe", "unsubscribe"}, [this](TgBot::Message::Ptr message) {
+        addVkTask(message, "toggleSubscription",
+                  {part_at(message, 1), (message->text == "/subscribe" ? "true" : "false")});
     });
 
     events->onCommand("list_subscriptions", [this](TgBot::Message::Ptr message) {
         addVkTask(message, "listSubscriptions");
+    });
+
+    events->onCommand("fetch_groups_from_me", [this](TgBot::Message::Ptr message) {
+        addVkTask(message, "fetchGroupsFromMe");
+    });
+
+#ifdef DEBUG
+    events->onCommand("force_update_vk_task", [this](TgBot::Message::Ptr message) {
+        Runner::instance()->tasks()->forceLaunch(PostsVkTask().id());
+    });
+#endif
+
+    //
+    // Other
+    //
+
+    events->onCommand({"start", "help"}, [this](TgBot::Message::Ptr message) {
+        sendHelp(message->chat->id);
     });
 
     events->onCommand("export", [this](TgBot::Message::Ptr message) {
@@ -89,12 +94,6 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
     events->onAnyMessage([this](TgBot::Message::Ptr message) {
         qDebug() << "Received message: " << message->text.c_str();
     });
-
-#ifdef DEBUG
-    events->onCommand("forceUpdateVkTask", [this](TgBot::Message::Ptr message) {
-        Runner::instance()->tasks()->forceLaunch(PostsVkTask().id());
-    });
-#endif
 }
 
 void ETelegram::addVkTask(TgBot::Message::Ptr message, const char *action, QStringList params) {
@@ -111,27 +110,26 @@ void ETelegram::handleFinished(QueueTask *task) {
     const User &user = task->user;
     Model *result = task->result();
 
-    if (name == "getLastPost" || name == "toggleSubscription" || name == "listSubscriptions") {
+    if (result != nullptr) {
         result->sendTo(user);
 
     } else {
-        qDebug() << "No handler in Telegram for action: " << name;
+        qDebug() << "Result is null in Telegram for action: " << name;
     }
 
     delete result;
     delete task;
 }
 
-void ETelegram::sendMessage(int64_t to, const QString &message, bool silent) {
+void ETelegram::sendMessage(int64_t to, const QString &message) {
     QStringList messages = Utils::splitMessageTo(message, 4096);
 
     for (const QString &split_message : messages) {
         try {
             api->sendMessage(to, split_message.toStdString(), false, 0, std::make_shared<TgBot::GenericReply>(),
-                             "Markdown",
-                             silent);
+                             "HTML", false);
         } catch (TgBot::TgException &e) {
-            printf("error: %s\n", e.what());
+            printf("Telegram Send error: %s\n", e.what());
         }
     }
 }
@@ -140,10 +138,30 @@ void ETelegram::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> atta
     api->sendMediaGroup(user, attachments);
 }
 
+QString ETelegram::part_at(TgBot::Message::Ptr in, int at) {
+    QStringList parts = QString::fromStdString(in->text).split(' ');
+
+    return parts.value(at, "null");
+}
+
+void ETelegram::sendHelp(int64_t to) {
+    sendMessage(to, "Available commands:\n"
+                    "/subscribe - Subscribe to Vk group\n"
+                    "/unsubscribe - Unsubscribe from Vk group\n"
+                    "/list_subscriptions - List subscribed Vk groups\n"
+                    "/vk_login - Login to Vk\n"
+                    "/vk_set_code - Enter code after vk login\n"
+                    "/vk_logout - Logout from Vk\n"
+                    "/fetch_groups_from_me - Subscribe to all groups from user, requires login");
+}
+
 // @BotFather commands
 //
-// get_last_post - Get last not-pinned post from Vk group
 // subscribe - Subscribe to Vk group
 // unsubscribe - Unsubscribe from Vk group
 // list_subscriptions - List subscribed Vk groups
+// vk_login - Login to Vk
+// vk_set_code - Enter code after vk login
+// vk_logout - Logout from Vk
+// fetch_groups_from_me - Subscribe to all groups from user, requires login
 //

@@ -19,6 +19,8 @@ struct User {
 
     explicit User(int64_t telegram_id) : id("T" + QString::number(telegram_id)) {}
 
+    bool isEmpty() const { return id.isEmpty(); }
+
     bool isTelegram() const { return id.startsWith('T'); }
 
     int64_t toTg() const {

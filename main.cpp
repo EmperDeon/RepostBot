@@ -7,8 +7,24 @@
 #include <QtCore/QCoreApplication>
 #include "Runner.h"
 
+class TCoreApplication : public QCoreApplication {
+public:
+    TCoreApplication(int argc, char **argv) : QCoreApplication(argc, argv) {};
+
+    bool notify(QObject *object, QEvent *event) override {
+        try {
+            return QCoreApplication::notify(object, event);
+
+        } catch (std::exception e) {
+            qDebug() << "Error in Event handler: " << e.what();
+        }
+
+        return false;
+    }
+};
+
 int main(int argc, char **argv) {
-    QCoreApplication a(argc, argv);
+    TCoreApplication a(argc, argv);
 
     auto *storage = Storage::instance();
     auto *app = Runner::instance();

@@ -18,7 +18,7 @@ void to_json(nlohmann::json &j, const QString &p) {
     j = p.toStdString();
 }
 
-void Model::sendTo(const User &user, bool silent) {
+void Model::sendTo(const User &user) {
     if (user.isTelegram()) {
         auto *tg = Runner::instance()->telegram();
 

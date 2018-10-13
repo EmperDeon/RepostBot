@@ -98,10 +98,9 @@ I think permanent storage of posts isn't needed, so i will store them in memory,
 ## TODO
 
 Vk:
-  - download photo (1280 or less)
-  - fetch not last but all unread (except for new groups)
+  - fetch not last but all unread (except for new groups), maybe move to vk.execute
 Rename and move vk and telegram to `api` folder (Terms Exporter and Importer aren't suitable)
-  - separate to `threads`, `bots` and `handlers` folders
+  - separate to `bots` and `handlers` folders
 
 
 # Conventions

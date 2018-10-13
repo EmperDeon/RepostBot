@@ -23,7 +23,7 @@ public:
 
     void launch() override;
 
-    void startTask(const QString &group, const QString &last_id);
+    void startTask(const QString &user, const QString &group, const QString &last_id);
 
     void handleFinished(QueueTask *task);
 
@@ -34,7 +34,7 @@ public:
 
     json &storage() { return Storage::instance()->value("task.vk.posts"); }
 
-    json &vk_storage() { return Storage::instance()->value("vk.groups"); }
+    json &vk_storage() { return Storage::instance()->value("vk"); }
 };
 
 

@@ -42,13 +42,17 @@ public:
 
     void handleFinished(QueueTask *task);
 
-    void sendMessage(int64_t to, const QString &message, bool silent = false);
+    void sendHelp(int64_t to);
+
+    void sendMessage(int64_t to, const QString &message);
 
     void sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments);
 
     QThread *createThread() override { return new ETelegramThread(bot, api); };
 
     bool isThreadable() override { return true; };
+
+    QString part_at(TgBot::Message::Ptr in, int at);
 };
 
 #endif //REPOSTBOT_ETELEGRAM_H

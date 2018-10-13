@@ -21,7 +21,7 @@ public:
 
     void load();
 
-    void save();
+    static void save();
 
     json &operator[](const QString &key) { return object[key.toStdString().c_str()]; }
 

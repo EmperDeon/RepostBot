@@ -15,5 +15,6 @@ Post::Post(const nlohmann::json &obj) {
 }
 
 QString Post::toString() const {
-    return QString("[%1](%2) - [Wall](%3) \n\n%4").arg(group_name).arg(group_link).arg(wall_link).arg(text);
+    return QString("<a href=\"%1\">%2</a> - <a href=\"%3\">Link</a>\n\n%4").arg(group_link).arg(group_name).arg(
+            wall_link).arg(text);
 }

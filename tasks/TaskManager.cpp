@@ -39,7 +39,7 @@ void TaskManager::timerEvent(QTimerEvent *e) {
         task->launch();
         last_launched[task->id()] = QDateTime::currentSecsSinceEpoch();
 
-        Storage::instance()->save();
+        Storage::save();
     }
 }
 
@@ -53,5 +53,5 @@ void TaskManager::forceLaunch(const QString &id) {
     task->launch();
     storage()["last_launched"][task->id()] = QDateTime::currentSecsSinceEpoch();
 
-    Storage::instance()->save();
+    Storage::save();
 }
