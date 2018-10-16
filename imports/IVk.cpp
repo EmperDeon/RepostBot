@@ -13,6 +13,7 @@
 #include <models/Post.h>
 #include <models/Error.h>
 #include <models/Status.h>
+#include <models/Posts.h>
 #include "IVk.h"
 
 void IVk::action(QueueTask *task) {
@@ -25,10 +26,14 @@ void IVk::action(QueueTask *task) {
     } else if (name == "setAuthCode") {
         setAuthCode(task, params[0]);
 
+    } else if (name == "updateGroupNames") {
+        updateGroupNames(task);
+
     } else if (name == "getLastPost") {
-        if (params.size() > 1) {
-            getLastPost(task, params[0], params.value(1, ""));
-        }
+        getLastPost(task, params[0], params.value(1, ""));
+
+    } else if (name == "getLastPosts") {
+        getLastPosts(task, params[0], params[1]);
 
     } else if (name == "toggleSubscription") {
         toggleSubscription(task, params[0], params[1] == "true");
@@ -54,7 +59,8 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
     }
 
     params = {{"count",    "2"},
-              {"extended", "1"}};
+              {"extended", "1"},
+              {"filter",   "owner"}};
 
     if (group_name[0].isDigit()) { // If group_name starts with digit, it's id
         params["owner_id"] = "-" + group_name;
@@ -62,21 +68,21 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
         params["domain"] = group_name;
     }
 
+    Model *model;
     response = request("wall.get", params, &task->user);
 
     json group = response["/response/groups/0"_json_pointer],
             post = response["/response/items/0"_json_pointer];
-    auto is_pinned = post["is_pinned"].get<int>(0);
-
 
     if (response.has_key("error") || post.empty()) {
-        TASK_ERROR(response);
+        model = new Post;
+        task->setResult(model);
+        return;
 
-    } else if (is_pinned) { // If pinned
+    } else if (post["is_pinned"].get<int>(0)) { // If pinned
         post = response["/response/items/1"_json_pointer];
     }
 
-    Model *model;
 
     if (QString::number(post["id"].get<int>()) == last_post_id) {
         model = new Post;
@@ -95,6 +101,86 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
     }
 
     task->setResult(model);
+}
+
+void IVk::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
+    if (group_ids.isEmpty() || last_ids.isEmpty()) {
+        TASK_ERROR("no group id");
+    }
+
+    // Request
+    json groups;
+    QStringList parsed_group_ids = {"string"}, posts; // First item is ignored
+
+    for (const QString &id : group_ids.split(','))
+        parsed_group_ids << (id[0].isDigit() ? "-" + id : id);
+
+    json response = request("execute.fetchLastPostFrom", {{"group_ids", parsed_group_ids.join(',')},
+                                                          {"post_ids",  last_ids}}, &task->user);
+
+    if (response.has_key("error")) {
+        qDebug() << response.dump(1).c_str();
+
+        task->setResult(new Post);
+        return;
+    }
+
+
+    // Organize and reorder
+    for (const json &post : response["response"]) {
+        QString owner = QString::number(post["owner_id"].get<int>(0));
+
+        groups[owner] += post;
+    }
+
+
+    // Collect to Posts
+    Posts *model = new Posts;
+    for (auto &it : groups.items()) {
+        std::sort(it.value().begin(), it.value().end(), [](const json &post_1, const json &post_2) {
+            return post_1["id"].get<int>() < post_2["id"].get<int>();
+        });
+
+        for (json &post : it.value()) {
+//            Post *post_model = new Post({
+//                                                {"id",       post["id"]},
+//                                                {"text",     post["text"]},
+//                                                {"owner_id", post["owner_id"]}
+//                                        });
+            post["group_name"] = storage()["group_names"][QString::number(post["owner_id"].get<int>()).mid(1)];
+
+            Post *post_model = new Post(post);
+
+            post_model->setAttachments(parseAttachments(post));
+            model->append(post_model);
+        }
+    }
+
+    task->setResult(model);
+}
+
+void IVk::updateGroupNames(QueueTask *task) {
+    json response, &groups = storage()["groups"], &group_names = storage()["group_names"];
+    QStringList ids;
+
+    if (!groups.empty()) {
+        for (const auto &it : groups.items())
+            for (const QString &group : it.value())
+                ids << group;
+
+        response = request("groups.getById", {{"group_ids", ids.join(',')}});
+
+        if (response.has_key("error")) {
+            TASK_ERROR(response.dumpQ(2));
+        }
+    }
+
+    for (const json &group : response["response"]) {
+        QString id = QString::number(group["id"].get<int>());
+        group_names[id] = group["name"];
+    }
+
+    Storage::save();
 }
 
 void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
@@ -158,8 +244,7 @@ void IVk::fetchGroupsFromMe(QueueTask *task) {
     for (const QString &group : groups) ids << group;
 
     json response = request("groups.get", {{"count",    "1000"},
-                                           {"extended", "1"},
-                                           {"user_id",  "381936777"}});
+                                           {"extended", "1"}}, &task->user);
 
     for (const json &group : response["/response/items"_json_pointer]) {
         QString name = group["screen_name"];
@@ -177,8 +262,9 @@ void IVk::fetchGroupsFromMe(QueueTask *task) {
     for (const QString &id : ids) groups += id;
 
     Storage::save();
-}
 
+    listSubscriptions(task);
+}
 
 nlohmann::json IVk::request(const QString &method, const nlohmann::json &params, User *user) {
     nlohmann::json json;
@@ -217,10 +303,10 @@ nlohmann::json IVk::request(const QString &method, const nlohmann::json &params,
     reply->deleteLater();
 
 #ifdef DEBUG
-//    qDebug() << json.dump(1).c_str();
+    qDebug() << json.dumpQ().mid(0, 256).toStdString().c_str();
 #endif
 
-    QTimer::singleShot(1500, &wait, SLOT(quit()));
+    QTimer::singleShot(3000, &wait, SLOT(quit()));
     wait.exec();
 
     return json;
@@ -275,6 +361,9 @@ QList<Attachment *> IVk::parseAttachments(const json &thing) {
         } else if (type == "video") {
         } else if (type == "audio") {
         } else if (type == "link") {
+        } else if (type == "doc") {
+        } else if (type == "podcast") {
+        } else if (type == "album") {
         } else if (type == "poll") {
         } else {
             qDebug() << "Type " << type << "is not supported by IVk::parseAttachment";

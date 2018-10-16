@@ -12,14 +12,14 @@ public:
     TCoreApplication(int argc, char **argv) : QCoreApplication(argc, argv) {};
 
     bool notify(QObject *object, QEvent *event) override {
-        try {
+//        try {
             return QCoreApplication::notify(object, event);
 
-        } catch (std::exception e) {
-            qDebug() << "Error in Event handler: " << e.what();
-        }
-
-        return false;
+//        } catch (std::exception e) {
+//            qDebug() << "Error in Event handler: " << e.what();
+//        }
+//
+//        return false;
     }
 };
 

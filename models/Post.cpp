@@ -8,13 +8,14 @@
 
 Post::Post(const nlohmann::json &obj) {
     model_id = QString::number(obj["id"].get<int>());
+    domain = obj["domain"].get<QString>();
     text = obj["text"].get<QString>();
-    group_name = obj["group_name"].get<QString>();
-    group_link = obj["group_link"].get<QString>();
-    wall_link = obj["wall_link"].get<QString>();
+    wall_link = "https://vk.com/wall" + QString::number(obj["owner_id"].get<int>()) + '_' + model_id;
+
+    if (obj.has_key("group_name"))
+        group_name = obj["group_name"].get<QString>(QString("Group name"));
 }
 
 QString Post::toString() const {
-    return QString("<a href=\"%1\">%2</a> - <a href=\"%3\">Link</a>\n\n%4").arg(group_link).arg(group_name).arg(
-            wall_link).arg(text);
+    return QString("<a href=\"%1\">%2</a>\n\n%3").arg(wall_link).arg(group_name).arg(text);
 }

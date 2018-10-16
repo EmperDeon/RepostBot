@@ -34,6 +34,13 @@ public:
     // Returns Post without id if post_id is same as last
     void getLastPost(QueueTask *task, QString group_name, QString last_post_id);
 
+    // Get last posts from groups
+    //  Vk limitation: number of groups should be equal or less 25
+    //  For now, group_ids and last_ids are list, joined by ','
+    //
+    // Returns posts list since last request(last_ids), grouped by Group
+    void getLastPosts(QueueTask *task, QString group_ids, QString last_ids);
+
     // Toggle subscription for user
     //
     // Returns human name of group
@@ -70,6 +77,8 @@ protected:
     QString defaultAuthUrl() { return VK_AUTH_DEFAULT_URL; }
 
     bool isAuthUrlDefault();
+
+    void updateGroupNames(QueueTask *task);
 };
 
 

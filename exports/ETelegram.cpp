@@ -46,7 +46,6 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
     //
     // Authorization
     //
-
     events->onCommand({"vk_login", "vk_logout"}, [this](TgBot::Message::Ptr message) {
         addVkTask(message, "toggleAuth", {(message->text == "/vk_login" ? "true" : "false")});
     });
@@ -58,6 +57,10 @@ ETelegram::ETelegram() : bot(new TgBot::Bot(TELEGRAM_TOKEN)), api(&bot->getApi()
     //
     // Subscription
     //
+    events->onCommand("get_last_post", [this](TgBot::Message::Ptr message) {
+        addVkTask(message, "getLastPost", {"156450176"});
+        addVkTask(message, "getLastPost", {"143655281"});
+    });
 
     events->onCommand({"subscribe", "unsubscribe"}, [this](TgBot::Message::Ptr message) {
         addVkTask(message, "toggleSubscription",
@@ -102,7 +105,7 @@ void ETelegram::addVkTask(TgBot::Message::Ptr message, const char *action, QStri
     tasks << task;
     connect(task, &QueueTask::hasFinished, this, &ETelegram::handleFinished);
 
-    queue->addTask(IVk::className(), task);
+    queue->addTask(IVk::className(), task, false);
 }
 
 void ETelegram::handleFinished(QueueTask *task) {
@@ -135,7 +138,11 @@ void ETelegram::sendMessage(int64_t to, const QString &message) {
 }
 
 void ETelegram::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments) {
-    api->sendMediaGroup(user, attachments);
+    try {
+        api->sendMediaGroup(user, attachments);
+    } catch (TgBot::TgException &e) {
+        printf("Telegram Send Media error: %s\n", e.what());
+    }
 }
 
 QString ETelegram::part_at(TgBot::Message::Ptr in, int at) {

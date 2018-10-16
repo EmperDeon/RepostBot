@@ -23,14 +23,14 @@ public:
 
     void launch() override;
 
-    void startTask(const QString &user, const QString &group, const QString &last_id);
+    void startTask(const QString &user, const QString &name, const QStringList &params = {});
 
     void handleFinished(QueueTask *task);
 
     QStringList usersWithGroup(const QString &group);
 
-//    launch once in 10 minutes
-    int interval() override { return 60 * 15; }
+//    launch once in hour
+    int interval() override { return 60 * 60; }
 
     json &storage() { return Storage::instance()->value("task.vk.posts"); }
 

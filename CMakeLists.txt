@@ -36,7 +36,7 @@ add_executable(RepostBot
         interfaces/Threadable.h interfaces/Model.h interfaces/Model.cpp interfaces/Exporter.h interfaces/Importer.h interfaces/User.h interfaces/Task.h
         exports/ETelegram.cpp exports/ETelegram.h
         imports/IVk.cpp imports/IVk.h vars.h
-        models/Attachment.cpp models/Post.h models/Post.cpp models/Error.cpp models/Error.h models/Status.cpp models/Status.h
+        models/Attachment.cpp models/Posts.h models/Post.h models/Post.cpp models/Error.cpp models/Error.h models/Status.cpp models/Status.h
 
         Storage.cpp Storage.h json.hpp Runner.cpp Runner.h
         utils/USingleton.h utils/concurrent/UFuture.h

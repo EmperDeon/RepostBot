@@ -11,10 +11,12 @@
 
 
 class Post : public Model {
-    QString group_name, group_link, wall_link;
+    QString group_name, wall_link;
     QString text;
 
 public:
+    QString domain;
+
     Post() = default;
 
     explicit Post(const nlohmann::json &obj);
