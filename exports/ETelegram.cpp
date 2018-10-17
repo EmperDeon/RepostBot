@@ -129,7 +129,7 @@ void ETelegram::sendMessage(int64_t to, const QString &message) {
 
     for (const QString &split_message : messages) {
         try {
-            api->sendMessage(to, split_message.toStdString(), false, 0, std::make_shared<TgBot::GenericReply>(),
+            api->sendMessage(to, split_message.toStdString(), true, 0, std::make_shared<TgBot::GenericReply>(),
                              "HTML", false);
         } catch (TgBot::TgException &e) {
             printf("Telegram Send error: %s\n", e.what());

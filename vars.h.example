@@ -9,6 +9,7 @@
 
 // Storage variables
 #define STORAGE_FILE "~/.config/RepostBot/config.json"
+#define CACHE_PATH "~/.cache/RepostBot/"
 
 // Create bot through @BotFather
 #define TELEGRAM_TOKEN "< Telegram token >"
