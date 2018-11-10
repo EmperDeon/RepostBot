@@ -4,19 +4,14 @@
 	See the provided LICENSE.TXT file for details.
 */
 
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkReply>
-#include <QtCore/QTimer>
-#include <QtCore/QEventLoop>
-#include <QtCore/QUrlQuery>
-#include <json.hpp>
-#include <models/Post.h>
-#include <models/Error.h>
-#include <models/Status.h>
 #include <models/Posts.h>
-#include "IVk.h"
+#include "VkHandler.h"
 
-void IVk::action(QueueTask *task) {
+VkHandler::VkHandler() {
+    api = new VkApi;
+}
+
+void VkHandler::action(QueueTask *task) {
     const QString &name = task->action;
     const QStringList &params = task->params;
 
@@ -51,7 +46,7 @@ void IVk::action(QueueTask *task) {
     emit manager->setAvailable(this);
 }
 
-void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id) {
+void VkHandler::getLastPost(QueueTask *task, QString group_name, QString last_post_id) {
     nlohmann::json response, params;
 
     if (group_name.isEmpty() || group_name == "null") {
@@ -69,7 +64,7 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
     }
 
     Model *model;
-    response = request("wall.get", params, &task->user);
+    response = api->request("wall.get", params, &task->user);
 
     json group = response["/response/groups/0"_json_pointer],
             post = response["/response/items/0"_json_pointer];
@@ -97,13 +92,13 @@ void IVk::getLastPost(QueueTask *task, QString group_name, QString last_post_id)
                                                 QString::number(post["id"].get<int>())}
                          });
 
-        model->setAttachments(parseAttachments(post));
+        model->setAttachments(api->parseAttachments(post));
     }
 
     task->setResult(model);
 }
 
-void IVk::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
+void VkHandler::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
     if (group_ids.isEmpty() || last_ids.isEmpty()) {
         TASK_ERROR("no group id");
     }
@@ -115,8 +110,8 @@ void IVk::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
     for (const QString &id : group_ids.split(','))
         parsed_group_ids << (id[0].isDigit() ? "-" + id : id);
 
-    json response = request("execute.fetchLastPostFrom", {{"group_ids", parsed_group_ids.join(',')},
-                                                          {"post_ids",  last_ids}}, &task->user);
+    json response = api->request("execute.fetchLastPostFrom", {{"group_ids", parsed_group_ids.join(',')},
+                                                               {"post_ids",  last_ids}}, &task->user);
 
     if (response.has_key("error")) {
         qDebug() << response.dump(1).c_str();
@@ -147,11 +142,11 @@ void IVk::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
 //                                                {"text",     post["text"]},
 //                                                {"owner_id", post["owner_id"]}
 //                                        });
-            post["group_name"] = storage()["group_names"][QString::number(post["owner_id"].get<int>()).mid(1)];
+            post["group_name"] = api->storage()["group_names"][QString::number(post["owner_id"].get<int>()).mid(1)];
 
             Post *post_model = new Post(post);
 
-            post_model->setAttachments(parseAttachments(post));
+            post_model->setAttachments(api->parseAttachments(post));
             model->append(post_model);
         }
     }
@@ -159,8 +154,8 @@ void IVk::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
     task->setResult(model);
 }
 
-void IVk::updateGroupNames(QueueTask *task) {
-    json response, &groups = storage()["groups"], &group_names = storage()["group_names"];
+void VkHandler::updateGroupNames(QueueTask *task) {
+    json response, &groups = api->storage()["groups"], &group_names = api->storage()["group_names"];
     QStringList ids;
 
     if (!groups.empty()) {
@@ -168,7 +163,7 @@ void IVk::updateGroupNames(QueueTask *task) {
             for (const QString &group : it.value())
                 ids << group;
 
-        response = request("groups.getById", {{"group_ids", ids.join(',')}});
+        response = api->request("groups.getById", {{"group_ids", ids.join(',')}});
 
         if (response.has_key("error")) {
             TASK_ERROR(response.dumpQ(2));
@@ -183,9 +178,9 @@ void IVk::updateGroupNames(QueueTask *task) {
     Storage::save();
 }
 
-void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
-    json &groups = storage()["groups"][task->user.id];
-    json response = request("groups.getById", {{"group_id", group_name}}, &task->user);
+void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
+    json &groups = api->storage()["groups"][task->user.id];
+    json response = api->request("groups.getById", {{"group_id", group_name}}, &task->user);
 
     if (group_name.isEmpty() || group_name == "null") {
         TASK_ERROR("no group id");
@@ -212,15 +207,15 @@ void IVk::toggleSubscription(QueueTask *task, const QString &group_name, bool va
     Storage::save();
 }
 
-void IVk::listSubscriptions(QueueTask *task) {
-    json response, &groups = storage()["groups"][task->user.id];
+void VkHandler::listSubscriptions(QueueTask *task) {
+    json response, &groups = api->storage()["groups"][task->user.id];
     QStringList ids;
 
     if (!groups.empty()) {
         for (const QString &group : groups) ids << group;
 
-        response = request("groups.getById", {{"group_ids", ids.join(',')},
-                                              {"fields",    "name"}});
+        response = api->request("groups.getById", {{"group_ids", ids.join(',')},
+                                                   {"fields",    "name"}});
 
         if (response.has_key("error")) {
             TASK_ERROR(response.dumpQ(2));
@@ -237,14 +232,14 @@ void IVk::listSubscriptions(QueueTask *task) {
     TASK_STATUS(ids.join('\n'));
 }
 
-void IVk::fetchGroupsFromMe(QueueTask *task) {
-    json &groups = storage()["groups"][task->user.id];
+void VkHandler::fetchGroupsFromMe(QueueTask *task) {
+    json &groups = api->storage()["groups"][task->user.id];
 
     QStringList ids;
     for (const QString &group : groups) ids << group;
 
-    json response = request("groups.get", {{"count",    "1000"},
-                                           {"extended", "1"}}, &task->user);
+    json response = api->request("groups.get", {{"count",    "1000"},
+                                                {"extended", "1"}}, &task->user);
 
     for (const json &group : response["/response/items"_json_pointer]) {
         QString name = group["screen_name"];
@@ -266,116 +261,8 @@ void IVk::fetchGroupsFromMe(QueueTask *task) {
     listSubscriptions(task);
 }
 
-nlohmann::json IVk::request(const QString &method, const nlohmann::json &params, User *user) {
-    nlohmann::json json;
-
-    QNetworkAccessManager manager;
-    QUrl c("https://api.vk.com/method/" + method);
-    QUrlQuery q;
-
-    QString user_token;
-
-    if (user != nullptr && !user->isEmpty()) {
-        user_token = storage()["tokens"][user->id].get<QString>();
-    }
-
-    if (user_token.isEmpty()) {
-        q.addQueryItem("access_token", VK_TOKEN);
-    } else {
-        q.addQueryItem("access_token", user_token);
-    }
-
-    q.addQueryItem("v", "5.84");
-
-    for (const auto &it : params.items()) {
-        q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));
-    }
-
-    c.setQuery(q);
-
-    QNetworkReply *reply = manager.get(QNetworkRequest(c));
-    QEventLoop wait;
-    QObject::connect(&manager, SIGNAL(finished(QNetworkReply * )), &wait, SLOT(quit()));
-    QTimer::singleShot(10000, &wait, SLOT(quit()));
-    wait.exec();
-    QByteArray resp = reply->readAll();
-    json = nlohmann::json::parse(QString::fromUtf8(resp).toStdString());
-    reply->deleteLater();
-
-#ifdef DEBUG
-    qDebug() << json.dumpQ().mid(0, 256).toStdString().c_str();
-#endif
-
-    QTimer::singleShot(3000, &wait, SLOT(quit()));
-    wait.exec();
-
-    return json;
-}
-
-nlohmann::json IVk::requestAuth(const QString &method, const nlohmann::json &params) {
-    nlohmann::json json;
-
-    QNetworkAccessManager manager;
-    QUrl c("https://oauth.vk.com/" + method);
-    QUrlQuery q;
-
-    q.addQueryItem("client_id", VK_AUTH_ID);
-    q.addQueryItem("client_secret", VK_AUTH_SECRET);
-    q.addQueryItem("redirect_uri", VK_AUTH_URL);
-
-    for (const auto &it : params.items()) {
-        q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));
-    }
-
-    c.setQuery(q);
-
-    QNetworkReply *reply = manager.get(QNetworkRequest(c));
-    QEventLoop wait;
-    QObject::connect(&manager, SIGNAL(finished(QNetworkReply * )), &wait, SLOT(quit()));
-    QTimer::singleShot(10000, &wait, SLOT(quit()));
-    wait.exec();
-    QByteArray resp = reply->readAll();
-    json = nlohmann::json::parse(QString::fromUtf8(resp).toStdString());
-    reply->deleteLater();
-
-#ifdef DEBUG
-    qDebug() << json.dump(1).c_str();
-#endif
-
-    return json;
-}
-
-QList<Attachment *> IVk::parseAttachments(const json &thing) {
-    QList<Attachment *> r;
-
-    if (!thing.has_key("attachments")) {
-        return r;
-    }
-
-    for (const json &attachment : thing["attachments"]) {
-        QString type = attachment["type"].get<QString>(QString());
-
-        if (type == "photo") {
-            r << new Attachment(type, attachment["/photo/sizes"_json_pointer].back()["url"].get<QString>());
-
-        } else if (type == "video") {
-        } else if (type == "audio") {
-        } else if (type == "link") {
-        } else if (type == "doc") {
-        } else if (type == "podcast") {
-        } else if (type == "album") {
-        } else if (type == "poll") {
-        } else {
-            qDebug() << "Type " << type << "is not supported by IVk::parseAttachment";
-            qDebug() << attachment.dump(2).c_str();
-        }
-    }
-
-    return r;
-}
-
-void IVk::toggleAuth(QueueTask *task, bool adding) {
-    json &tokens = storage()["tokens"];
+void VkHandler::toggleAuth(QueueTask *task, bool adding) {
+    json &tokens = api->storage()["tokens"];
 
     if (task->user.isEmpty()) {
         TASK_ERROR("No User is passed");
@@ -408,14 +295,14 @@ void IVk::toggleAuth(QueueTask *task, bool adding) {
     }
 }
 
-void IVk::setAuthCode(QueueTask *task, const QString &code) {
-    json &tokens = storage()["tokens"];
+void VkHandler::setAuthCode(QueueTask *task, const QString &code) {
+    json &tokens = api->storage()["tokens"];
 
     if (code.isEmpty()) {
         TASK_ERROR("No Code is passed");
     }
 
-    json response = requestAuth("access_token", {{"code", code}});
+    json response = api->requestAuth("access_token", {{"code", code}});
 
     if (response.has_key("error")) {
         TASK_ERROR("Error, try reauth");
@@ -425,19 +312,19 @@ void IVk::setAuthCode(QueueTask *task, const QString &code) {
     Storage::save();
 
     // TODO: Verify that user token works
-    response = request("users.get", {{"user_ids", std::to_string(response["user_id"].get<int>())}}, &task->user);
+    response = api->request("users.get", {{"user_ids", std::to_string(response["user_id"].get<int>())}}, &task->user);
 
     TASK_STATUS(QString("Logged in as %1 %2").arg(response["/response/0/first_name"_json_pointer].get<QString>()).arg(
             response["/response/0/last_name"_json_pointer].get<QString>()));
 }
 
-QString IVk::authUrl() {
+QString VkHandler::authUrl() {
     return QString(
             "https://oauth.vk.com/authorize?client_id=%1&scope=groups,offline&redirect_uri=%2&display=page&v=5.84&response_type=code")
             .arg(VK_AUTH_ID)
             .arg(VK_AUTH_URL);
 }
 
-bool IVk::isAuthUrlDefault() {
+bool VkHandler::isAuthUrlDefault() {
     return QString(VK_AUTH_URL) == VK_AUTH_DEFAULT_URL;
 }

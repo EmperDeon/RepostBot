@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2017-2018 by Ilya Barykin
+	Copyright (c) 2018 by Ilya Barykin
 	Released under the MIT License.
 	See the provided LICENSE.TXT file for details.
 */
@@ -17,9 +17,9 @@ class PostsVkTask : public Task {
     QList<QueueTask *> tasks;
 
 public:
-    PostsVkTask();
+    PostsVkTask(Runner *runner);
 
-    QString id() override { return "task.vk.posts"; };
+    static QString id() { return "task.vk.posts"; };
 
     void launch() override;
 

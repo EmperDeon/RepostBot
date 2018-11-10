@@ -9,18 +9,9 @@
 #include <Runner.h>
 #include <tgbot/Api.h>
 
-
-void from_json(const nlohmann::json &j, QString &p) {
-    p = QString::fromStdString(j);
-}
-
-void to_json(nlohmann::json &j, const QString &p) {
-    j = p.toStdString();
-}
-
 void Model::sendTo(const User &user) {
     if (user.isTelegram()) {
-        auto *tg = Runner::instance()->telegram();
+        auto *tg = Runner::instance()->telegramApi();
 
         tg->sendMessage(user.toTg(), toString());
 

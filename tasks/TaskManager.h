@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2017-2018 by Ilya Barykin
+	Copyright (c) 2018 by Ilya Barykin
 	Released under the MIT License.
 	See the provided LICENSE.TXT file for details.
 */
@@ -9,14 +9,17 @@
 #include <interfaces/Task.h>
 #include <QtCore/QList>
 #include <QtCore/QObject>
+#include <Runner.h>
 
+
+class Runner;
 
 class TaskManager : public QObject {
     QMap<QString, Task *> tasks;
 
 
 public:
-    TaskManager();
+    TaskManager(Runner *runner);
 
     void start();
 

@@ -10,24 +10,21 @@
 #include <QtCore/QObject>
 #include <QtCore/QMap>
 #include <Storage.h>
-#include <interfaces/Exporter.h>
-#include <interfaces/Importer.h>
 #include <queue/QueueManager.h>
 #include <tasks/TaskManager.h>
+#include <apis/TelegramApi.h>
+#include <interfaces/Bot.h>
 
-
-class ETelegram;
 
 class Runner : public QObject, public USingleton<Runner> {
     Storage *storage;
     QueueManager *manager;
     TaskManager *tasks_manager;
 
-    ETelegram *e_telegram;
+    TelegramApi *api_telegram;
 
-    QMap<QString, Exporter *> exporters;
+    QMap<QString, Bot *> bots;
     QList<QueueHandler *> handlers;
-    QMap<QString, QThread *> threads;
 
 public:
     Runner();
@@ -38,7 +35,7 @@ public:
 
     TaskManager *tasks() const { return tasks_manager; }
 
-    ETelegram *telegram() const { return e_telegram; }
+    TelegramApi *telegramApi() const { return api_telegram; }
 };
 
 

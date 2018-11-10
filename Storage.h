@@ -8,7 +8,7 @@
 #define REPOSTBOT_STORAGE_H
 
 #include <utils/USingleton.h>
-#include "json.hpp"
+#include "vendor/json/json.hpp"
 
 using json = nlohmann::json;
 
@@ -35,6 +35,10 @@ public:
 
     const json &value(const char *key) const { return object[key]; }
 };
+
+void from_json(const nlohmann::json &j, QString &p);
+
+void to_json(nlohmann::json &j, const QString &p);
 
 
 #endif //REPOSTBOT_STORAGE_H

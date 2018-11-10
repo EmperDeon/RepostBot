@@ -8,8 +8,6 @@
 #define REPOSTBOT_MODEL_H
 
 #include <QtCore/QString>
-#include <json.hpp>
-#include <exports/ETelegram.h>
 #include "User.h"
 #include "models/Attachment.h"
 
@@ -37,9 +35,5 @@ public:
     // Sending
     virtual void sendTo(const User &user);
 };
-
-void from_json(const nlohmann::json &j, QString &p);
-
-void to_json(nlohmann::json &j, const QString &p);
 
 #endif //REPOSTBOT_MODEL_H

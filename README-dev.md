@@ -1,19 +1,21 @@
 ## File structure
-- exports
-  - ETelegram - Telegram bot
-- imports
-  - IVk - VK API
+- apis
+  - bots
+    - TelegramBot
+  - handlers
+    - VkHandler
+  - TelegramApi
+  - VkApi
 - interfaces
-  - Exporter
-  - Importer
+  - Bot - QThread
   - Model
   - Task
-  - Threadable
   - User - Abstraction for storing user ids
 - models
   - Attachment - Photos, Videos, Music, etc.
   - Error
   - Post
+  - Posts
   - Status
 - queue
   - QueueHandler - Interface
@@ -30,10 +32,10 @@
   - USingleton
   - Utils
 - vendor
+  - cotire - Unity builds (All cpp files compiled as one)
   - tgbot-cpp - Telegram Bot API library
-  - cotire - Unity builds
   - verdigris - Replacement for MOC (Needed for unity builds)
-- Runner - keeper of threads,
+- Runner - keeper of pointers to Queue, Bots and Api's
 - Storage - json storage
 - vars - secure variables: tokens, etc.
 - vars.h.example - template for secure variables
@@ -75,15 +77,13 @@ I think permanent storage of posts isn't needed, so i will store them in memory,
 ```
 
 
-## Tasks - Users
+## Models
 
 `User` is universal user_id storage. Each bot should have separate constructor and add prefix to id, for methods like `isTelegram` to work. Model method `sendTo(User)` decides to which `Export` send itself, and will add task for it.
 
 
 ## TODO
 
-Rename and move vk and telegram to `api` folder (Terms Exporter and Importer aren't suitable)
-  - separate to `bots` and `handlers` folders
 Handle errors, and logs (write to temp file, send to "admin" user)
 
 
@@ -100,7 +100,9 @@ Any method that writes to Storage should call save after last write or at end of
 
 ## VK
 
-Code for execute.fetchLastPostFrom
+Code for stored procedure `execute.fetchLastPostFrom`.
+Can take only 20 groups
+
 
 ```javascript
 var POSTS_COUNT = 10;

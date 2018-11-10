@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2017-2018 by Ilya Barykin
+	Copyright (c) 2018 by Ilya Barykin
 	Released under the MIT License.
 	See the provided LICENSE.TXT file for details.
 */
@@ -8,11 +8,11 @@
 #include "TaskManager.h"
 #include <QDebug>
 
-TaskManager::TaskManager() {
-    auto *vk_posts = new PostsVkTask;
+TaskManager::TaskManager(Runner *runner) {
+    auto *vk_posts = new PostsVkTask(runner);
 
     tasks = {
-            {vk_posts->id(), vk_posts}
+            {PostsVkTask::id(), vk_posts}
     };
 }
 
@@ -27,8 +27,9 @@ void TaskManager::timerEvent(QTimerEvent *e) {
         last_launched = {};
     }
 
-    for (auto *task : tasks.values()) {
-        QDateTime last = QDateTime::fromSecsSinceEpoch(last_launched[task->id()].get<long long>(0));
+    for (auto task_id : tasks.keys()) {
+        auto *task = tasks[task_id];
+        QDateTime last = QDateTime::fromSecsSinceEpoch(last_launched[task_id].get<long long>(0));
         last = last.addSecs(task->interval());
 
         // Skip, if not enough time is passed
@@ -37,7 +38,7 @@ void TaskManager::timerEvent(QTimerEvent *e) {
         }
 
         task->launch();
-        last_launched[task->id()] = QDateTime::currentSecsSinceEpoch();
+        last_launched[task_id] = QDateTime::currentSecsSinceEpoch();
 
         Storage::save();
     }
@@ -51,7 +52,7 @@ void TaskManager::forceLaunch(const QString &id) {
     }
 
     task->launch();
-    storage()["last_launched"][task->id()] = QDateTime::currentSecsSinceEpoch();
+    storage()["last_launched"][id] = QDateTime::currentSecsSinceEpoch();
 
     Storage::save();
 }

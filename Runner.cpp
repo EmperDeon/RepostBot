@@ -4,52 +4,31 @@
 	See the provided LICENSE.TXT file for details.
 */
 
-#include <exports/ETelegram.h>
-#include <imports/IVk.h>
 #include "Runner.h"
 #include <QDebug>
 #include <tasks/vk/PostsVkTask.h>
 #include <tests/TestUtils.h>
+#include <apis/bots/TelegramBot.h>
+#include <apis/handlers/VkHandler.h>
 
 Runner::Runner() {
     storage = Storage::instance();
     storage->load();
     manager = new QueueManager;
+    tasks_manager = new TaskManager(this);
 }
 
 void Runner::start() {
-    tasks_manager = new TaskManager;
 
-    handlers = {
-            new IVk
-    };
-
+    handlers = {new VkHandler()};
     manager->addHandlers(handlers);
 
-    e_telegram = new ETelegram;
-
-    exporters = {
-            {"Telegram", e_telegram}
-    };
-
-    for (QString key : exporters.keys()) {
-        auto value = exporters[key];
-
-        if (!value->isThreadable()) {
-            continue;
-        }
-
-        key = "E" + key;
-
-        threads[key] = value->createThread();
+    bots = {{"Telegram", new TelegramBot(this)}};
+    for (Bot *bot : bots.values()) {
+        bot->start();
     }
 
-    for (QThread *thread : threads.values()) {
-        thread->start();
-    }
+    api_telegram = dynamic_cast<TelegramBot *>(bots["Telegram"])->api;
 
     tasks_manager->start();
-
-//    TestUtils test;
-//    test.runTest();
 }

@@ -10,6 +10,8 @@
 #include <QtCore/QThread>
 #include <verdigris/src/wobjectdefs.h>
 #include <verdigris/src/wobjectimpl.h>
+#include <models/Status.h>
+#include <models/Error.h>
 #include "QueueTask.h"
 #include "QueueManager.h"
 

@@ -12,6 +12,9 @@ Post::Post(const nlohmann::json &obj) {
     text = obj["text"].get<QString>();
     wall_link = "https://vk.com/wall" + QString::number(obj["owner_id"].get<int>()) + '_' + model_id;
 
+    if (domain.startsWith('-'))
+        domain.remove(0, 1);
+
     if (obj.has_key("group_name"))
         group_name = obj["group_name"].get<QString>(QString("Group name"));
 }

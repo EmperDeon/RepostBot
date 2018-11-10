@@ -8,7 +8,7 @@
 #define REPOSTBOT_ERROR_H
 
 #include <interfaces/Model.h>
-#include <json.hpp>
+#include "Storage.h"
 
 
 class Error : public Model {
@@ -19,7 +19,7 @@ public:
 
     explicit Error(const QString &_text);
 
-    explicit Error(const nlohmann::json &obj);
+    explicit Error(const json &obj);
 
     QString toString() const override { return error; }
 };

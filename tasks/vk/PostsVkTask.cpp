@@ -1,16 +1,17 @@
 /*
-	Copyright (c) 2017-2018 by Ilya Barykin
+	Copyright (c) 2018 by Ilya Barykin
 	Released under the MIT License.
 	See the provided LICENSE.TXT file for details.
 */
 #include <QtCore/QDateTime>
 #include <QDebug>
-#include <imports/IVk.h>
 #include <models/Posts.h>
+#include <Runner.h>
+#include <apis/handlers/VkHandler.h>
 #include "PostsVkTask.h"
 
-PostsVkTask::PostsVkTask() {
-    queue = Runner::instance()->queue();
+PostsVkTask::PostsVkTask(Runner *runner) {
+    queue = runner->queue();
 }
 
 void PostsVkTask::launch() {
@@ -69,7 +70,7 @@ void PostsVkTask::startTask(const QString &user, const QString &name, const QStr
     tasks << task;
     connect(task, &QueueTask::hasFinished, this, &PostsVkTask::handleFinished);
 
-    queue->addTask(IVk::className(), task);
+    queue->addTask(VkHandler::className(), task);
 }
 
 void PostsVkTask::handleFinished(QueueTask *task) {
@@ -93,6 +94,12 @@ void PostsVkTask::handleFinished(QueueTask *task) {
 
     } else if (result == nullptr) {
         qDebug() << "Result is null in PostsVkTask for action: " << name;
+    }
+
+    tasks.removeAll(task);
+
+    if (tasks.isEmpty()) {
+        qDebug() << "PostsVkTask has finished\n";
     }
 
     delete result;

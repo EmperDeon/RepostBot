@@ -10,6 +10,6 @@ Error::Error(const char *_text) : error(_text) {}
 
 Error::Error(const QString &_text) : error(_text) {}
 
-Error::Error(const nlohmann::json &obj) {
+Error::Error(const json &obj) {
     error = "Ошибка: \n" + obj.dumpQ(2);
 }

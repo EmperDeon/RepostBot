@@ -1,12 +1,12 @@
 # RepostBot
 
-Telegram (or maybe other messengers later) bot for reposting messages/posts from various sites.
+Telegram bot for reposting from various sites.
 
 
 ## Current project
 
-- Telegram subscribe bot (Export)
-- VK wall posts import (Import)
+- Telegram subscribe bot
+- VK wall posts import
 
 
 ## Sites that will maybe supported in future

@@ -9,7 +9,6 @@
 
 #include <QtCore/QMap>
 #include <QtCore/QQueue>
-#include <interfaces/Threadable.h>
 #include <tests/TestCase.h>
 #include "QueueTask.h"
 #include "QueueHandler.h"
