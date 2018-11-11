@@ -2,6 +2,7 @@
 
 Telegram bot for reposting from various sites.
 
+Launched on my own server as [@VkRepost2Bot](https://t.me/VkRepost2Bot).
 
 ## Current project
 
