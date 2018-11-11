@@ -7,6 +7,7 @@
 #ifndef REPOSTBOT_POST_H
 #define REPOSTBOT_POST_H
 
+#include <Storage.h>
 #include "interfaces/Model.h"
 
 
@@ -19,7 +20,7 @@ public:
 
     Post() = default;
 
-    explicit Post(const nlohmann::json &obj);
+    explicit Post(const json &obj);
 
     QString toString() const override;
 };

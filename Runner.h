@@ -15,6 +15,7 @@
 #include <apis/TelegramApi.h>
 #include <interfaces/Bot.h>
 
+class TaskManager;
 
 class Runner : public QObject, public USingleton<Runner> {
     Storage *storage;

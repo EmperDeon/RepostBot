@@ -11,6 +11,7 @@
 #include <queue/QueueTask.h>
 #include <queue/QueueManager.h>
 
+class Runner;
 
 class PostsVkTask : public Task {
     QueueManager *queue;

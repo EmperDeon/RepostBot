@@ -6,7 +6,7 @@
 
 #include "Post.h"
 
-Post::Post(const nlohmann::json &obj) {
+Post::Post(const json &obj) {
     model_id = QString::number(obj["id"].get<int>());
     domain = obj["domain"].get<QString>();
     text = obj["text"].get<QString>();

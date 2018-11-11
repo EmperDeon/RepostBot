@@ -2,3 +2,5 @@
 cmake-build-*
 vars.h
 !vars.h.example
+build/*
+vendor/libs*
