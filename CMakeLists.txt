@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor")
 
+# Minizip
+set(USE_BZIP2 OFF)
 
 find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
 
@@ -30,38 +32,40 @@ endif ()
 
 include(cotire/CMake/cotire)
 add_subdirectory(vendor/tgbot-cpp)
+add_subdirectory(vendor/minizip)
 include_directories(vendor/tgbot-cpp/include)
 include_directories(vendor/)
 
 set(TEST_SOURCES
-        tests/TestCase.h tests/queue/QueueHelper.cpp tests/queue/QueueHelper.h tests/TestHelper.cpp tests/TestHelper.h
-        tests/queue/TestQueue1.cpp tests/queue/TestQueue1.h tests/queue/TestQueue2.cpp tests/queue/TestQueue2.h
-        tests/TestUtils.cpp tests/TestUtils.h
-        tests/TestAttachment.cpp tests/TestAttachment.h
+        tests/queue/QueueHelper.cpp tests/TestHelper.cpp
+        tests/queue/TestQueue1.cpp tests/queue/TestQueue2.cpp
+        tests/TestUtils.cpp
+        tests/TestAttachment.cpp
         )
 
 add_executable(RepostBot
-        interfaces/Bot.h interfaces/Model.h interfaces/Model.cpp interfaces/User.h interfaces/Task.h
-        apis/TelegramApi.cpp apis/TelegramApi.h apis/bots/TelegramBot.cpp apis/bots/TelegramBot.h
-        apis/VkApi.cpp apis/VkApi.h apis/handlers/VkHandler.cpp apis/handlers/VkHandler.h
+        apis/TelegramApi.cpp apis/bots/TelegramBot.cpp
+        apis/VkApi.cpp apis/handlers/VkHandler.cpp
 
-        models/Attachment.cpp models/Attachment.h models/Posts.h models/Post.h models/Post.cpp models/Error.cpp models/Error.h models/Status.cpp models/Status.h
+        interfaces/Model.cpp
 
-        Storage.cpp Storage.h Runner.cpp Runner.h
-        utils/USingleton.h utils/concurrent/UFuture.h
+        models/Attachment.cpp models/Post.cpp models/Error.cpp models/Status.cpp
 
-        queue/QueueManager.cpp queue/QueueManager.h queue/QueueTask.cpp queue/QueueTask.h queue/QueueHandler.h queue/QueueHandler.cpp
+        Storage.cpp Runner.cpp
+        utils/Zip.cpp utils/logs/Logger.cpp
 
-        tasks/TaskManager.cpp tasks/TaskManager.h
-        tasks/vk/PostsVkTask.cpp tasks/vk/PostsVkTask.h
+        queue/QueueManager.cpp queue/QueueTask.cpp queue/QueueHandler.cpp
 
-        utils/Utils.cpp utils/Utils.h
+        tasks/TaskManager.cpp
+        tasks/vk/PostsVkTask.cpp
+
+        utils/Utils.cpp
 
         ${TEST_SOURCES}
 
         main.cpp)
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
-target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot ssl crypto)
+target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot libminizip ssl crypto)
 
 cotire(RepostBot)

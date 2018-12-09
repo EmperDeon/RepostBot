@@ -5,6 +5,7 @@
 */
 
 #include <models/Posts.h>
+#include <utils/logs/Logger.h>
 #include "VkHandler.h"
 
 VkHandler::VkHandler() {
@@ -40,7 +41,7 @@ void VkHandler::action(QueueTask *task) {
         fetchGroupsFromMe(task);
 
     } else {
-        qDebug() << "No such action: " << name;
+        logW("No such action: " + name);
     }
 
     emit manager->setAvailable(this);
@@ -114,7 +115,8 @@ void VkHandler::getLastPosts(QueueTask *task, QString group_ids, QString last_id
                                                                {"post_ids",  last_ids}}, &task->user);
 
     if (response.has_key("error")) {
-        qDebug() << response.dump(1).c_str();
+        logW("Error received from fetchLastPost");
+        logD(response.dumpQ(1));
 
         task->setResult(new Post);
         return;
@@ -173,6 +175,15 @@ void VkHandler::updateGroupNames(QueueTask *task) {
     for (const json &group : response["response"]) {
         QString id = QString::number(group["id"].get<int>());
         group_names[id] = group["name"];
+
+        for (const auto &it : groups.items()) {
+            auto &item = it.value();
+
+            if (item.has_value(group["screen_name"])) {
+                item.eraseAllV(group["screen_name"]);
+                item.push_back(id);
+            }
+        }
     }
 
     Storage::save();
@@ -237,6 +248,11 @@ void VkHandler::fetchGroupsFromMe(QueueTask *task) {
 
     QStringList ids;
     for (const QString &group : groups) ids << group;
+
+    auto user = task->user;
+    if (user.isEmpty() || !api->storage()["tokens"].has_key(user.id)) {
+        TASK_ERROR("User not logged in");
+    }
 
     json response = api->request("groups.get", {{"count",    "1000"},
                                                 {"extended", "1"}}, &task->user);

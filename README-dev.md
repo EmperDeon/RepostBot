@@ -108,7 +108,7 @@ Can take only 20 groups
 var POSTS_COUNT = 10;
 
 var group_ids = Args.group_ids.split(",");
-var post_ids = Args.post_ids.split(",");
+var post_ids_joined = Args.post_ids.split(",");
 
 var ig = 1, groups_count = group_ids.length;
 var r = [];
@@ -117,7 +117,6 @@ while (ig < groups_count) {
     var group_id = group_ids[ig];
     var posts;
     var ip = 0;
-    var not_break = true;
 
     if (group_id.substr(0,1) == "-") {
         posts = API.wall.get({count: POSTS_COUNT, filter: "owner", v: "5.85", owner_id: group_id}).items;
@@ -126,14 +125,18 @@ while (ig < groups_count) {
     }
 
     var posts_count = posts.length;
+    var post_ids = post_ids_joined[ig - 1];
+
+    if (post_ids.length > 0) {
+        post_ids = post_ids.split(":");
+    } else {
+        post_ids = [];
+    }
 
     while (ip < posts_count) {
         var post = posts[ip];
-        if (post.id == post_ids[ig - 1]) {
-            not_break = false;
-        }
 
-        if (not_break && post.is_pinned != 1) {
+        if (post_ids.indexOf(post.id + "") == -1 && post.is_pinned != 1) {
             post.domain = group_id;
             r.push(post);
         }

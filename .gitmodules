@@ -7,3 +7,6 @@
 [submodule "vendor/cotire"]
 	path = vendor/cotire
 	url = https://github.com/sakra/cotire
+[submodule "vendor/minizip"]
+	path = vendor/minizip
+	url = https://github.com/nmoinvaz/minizip.git

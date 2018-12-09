@@ -17,7 +17,7 @@
 
 class TaskManager;
 
-class Runner : public QObject, public USingleton<Runner> {
+class Runner : public QObject, public Utils::Singleton<Runner> {
     Storage *storage;
     QueueManager *manager;
     TaskManager *tasks_manager;

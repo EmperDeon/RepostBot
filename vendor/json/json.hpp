@@ -18594,9 +18594,7 @@ Format](http://rfc7159.net/rfc7159)
         }
 
 #define JSON_APPEND_JSON
-
 #include "additional_functions.cpp"
-
 #undef JSON_APPEND_JSON
 
         /// @}
@@ -18691,6 +18689,11 @@ inline nlohmann::json::json_pointer operator "" _json_pointer(const char *s, std
 
 // #include <nlohmann/detail/macro_unscope.hpp>
 
+#define JSON_APPEND_CONVERSIONS
+
+#include "additional_functions.cpp"
+
+#undef JSON_APPEND_CONVERSIONS
 
 // restore GCC/clang diagnostic settings
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)

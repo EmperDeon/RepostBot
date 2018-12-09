@@ -25,13 +25,15 @@ SOURCES += main.cpp \
   tasks/TaskManager.cpp \
   tasks/vk/PostsVkTask.cpp \
   utils/Utils.cpp \
+  utils/logs/Logger.cpp \
+  utils/Zip.cpp \
   Storage.cpp \
   Runner.cpp
 
 
 LIBS += -L$$PWD/vendor/libs-linux-64/
 
-LIBS += -lTgBot -lcurl -lcrypto -lssl -lboost_system -ljpeg -lcares_static
+LIBS += -lTgBot -lcurl -lz -lssl -lcrypto -ldl -lboost_system -ljpeg -lcares_static -lminizip
 
 INCLUDEPATH += $$PWD/vendor/
 INCLUDEPATH += $$PWD/vendor/tgbot-cpp/include

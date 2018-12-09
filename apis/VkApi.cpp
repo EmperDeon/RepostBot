@@ -8,6 +8,7 @@
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
 #include <Storage.h>
+#include <utils/logs/Logger.h>
 #include "VkApi.h"
 
 nlohmann::json VkApi::request(const QString &method, const nlohmann::json &params, User *user) {
@@ -16,7 +17,7 @@ nlohmann::json VkApi::request(const QString &method, const nlohmann::json &param
 
     QString user_token;
 
-    if (user != nullptr && !user->isEmpty()) {
+    if (user != nullptr && !user->isEmpty() && storage()["tokens"].has_key(user->id)) {
         user_token = storage()["tokens"][user->id].get<QString>();
     }
 
@@ -78,8 +79,8 @@ QList<Attachment *> VkApi::parseAttachments(const json &thing) {
         } else if (type == "album") {
         } else if (type == "poll") {
         } else {
-            qDebug() << "Type " << type << "is not supported by VkApi::parseAttachment";
-            qDebug() << attachment.dump(2).c_str();
+            logD("Type " + type + "is not supported by VkApi::parseAttachment");
+            logD(attachment.dumpQ(2));
         }
     }
 
@@ -89,6 +90,8 @@ QList<Attachment *> VkApi::parseAttachments(const json &thing) {
 json VkApi::vk_request(const QUrl &url) {
     QNetworkAccessManager manager;
     nlohmann::json json;
+
+    logD("Requesting url: " + url.toString());
 
     QNetworkReply *reply = manager.get(QNetworkRequest(url));
     QEventLoop wait;
@@ -102,11 +105,10 @@ json VkApi::vk_request(const QUrl &url) {
     if (!resp.isEmpty()) {
         json = nlohmann::json::parse(resp.toStdString());
 
-#ifdef DEBUG
-        qDebug() << json.dumpQ().mid(0, 256).toStdString().c_str();
-#endif
+        logD("Received response:");
+        logV(json.dumpQ());
     } else {
-        qDebug() << "VkApi: Response is empty";
+        logW("Response is empty");
     }
 
     QTimer::singleShot(3000, &wait, SLOT(quit()));

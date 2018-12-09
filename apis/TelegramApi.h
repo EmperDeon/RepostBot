@@ -30,6 +30,8 @@ public:
     void sendMessage(int64_t to, const QString &message);
 
     void sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments);
+
+    void sendFile(int64_t user, QString path);
 };
 
 

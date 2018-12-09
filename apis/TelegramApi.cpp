@@ -61,3 +61,15 @@ void TelegramApi::sendHelp(int64_t to) {
                     "/vk_logout - Logout from Vk\n"
                     "/fetch_groups_from_me - Subscribe to all groups from user, requires login");
 }
+
+void TelegramApi::sendFile(int64_t user, QString path) {
+    try {
+        tg_api->sendDocument(user, TgBot::InputFile::fromFile(path.toStdString(), "text/plain"));
+    } catch (TgBot::TgException &e) {
+        printf("Telegram Send Media error: %s\n", e.what());
+    } catch (boost::system::system_error const &e) {
+        printf("Boost Error: %s\n", e.what());
+    } catch (std::runtime_error const &e) {
+        printf("Curl Error: %s\n", e.what());
+    }
+}

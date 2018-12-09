@@ -5,6 +5,9 @@
 */
 
 #include <QtCore/QCoreApplication>
+#include <utils/Zip.h>
+#include <utils/logs/Logger.h>
+#include <QtCore/QTimer>
 #include "Runner.h"
 
 class TCoreApplication : public QCoreApplication {
@@ -13,7 +16,7 @@ public:
 
     bool notify(QObject *object, QEvent *event) override {
 //        try {
-            return QCoreApplication::notify(object, event);
+        return QCoreApplication::notify(object, event);
 
 //        } catch (std::exception e) {
 //            qDebug() << "Error in Event handler: " << e.what();
@@ -26,6 +29,10 @@ public:
 int main(int argc, char **argv) {
     TCoreApplication a(argc, argv);
 
+    logI("");
+    logI("Started RepostBot");
+
+    auto *logger = new Utils::Logger;
     auto *storage = Storage::instance();
     auto *app = Runner::instance();
 

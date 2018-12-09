@@ -147,3 +147,28 @@ ValueType get(ValueType def) const noexcept(noexcept(
 #pragma clang diagnostic pop
 #endif
 
+
+#ifdef JSON_APPEND_CONVERSIONS
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "CannotResolve"
+void from_json(const nlohmann::json &j, QString &p) {
+    p = QString::fromStdString(j);
+}
+
+void to_json(nlohmann::json &j, const QString &p) {
+    j = p.toStdString();
+}
+
+void from_json(const nlohmann::json &j, QStringList &l) {
+    for (const auto &str : j) {
+        l << str.get<QString>(QString());
+    }
+}
+
+void to_json(nlohmann::json &j, const QStringList &l) {
+    for (const auto &str : j) {
+        j.push_back(str);
+    }
+}
+#pragma clang diagnostic pop
+#endif

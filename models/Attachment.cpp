@@ -43,11 +43,14 @@ TgBot::InputMedia::Ptr Attachment::toTg() {
 
     if (type == "photo") {
         r->type = TgBot::InputMedia::TYPE::PHOTO;
+        r->media = url.toStdString();
     } else if (type == "video") {
         r->type = TgBot::InputMedia::TYPE::VIDEO;
+        r->media = url.toStdString();
+    } else if (type == "file") {
+        r->type = TgBot::InputMedia::TYPE::DOCUMENT;
+        r->media = "attach://" + url.toStdString();
     }
-
-    r->media = url.toStdString();
 
     return r;
 }

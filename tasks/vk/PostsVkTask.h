@@ -30,8 +30,8 @@ public:
 
     QStringList usersWithGroup(const QString &group);
 
-//    launch once in hour
-    int interval() override { return 60 * 60; }
+//    launch every 30 minutes
+    int interval() override { return 30 * 60; }
 
     json &storage() { return Storage::instance()->value("task.vk.posts"); }
 

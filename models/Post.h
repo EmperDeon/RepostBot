@@ -13,10 +13,10 @@
 
 class Post : public Model {
     QString group_name, wall_link;
-    QString text;
+    QString posted_at, text;
 
 public:
-    QString domain;
+    QString group_id;
 
     Post() = default;
 

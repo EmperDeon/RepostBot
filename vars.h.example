@@ -8,20 +8,30 @@
 #define REPOSTBOT_VARS_H
 
 // Storage variables
-#define STORAGE_FILE "~/.config/RepostBot/config.json"
-#define CACHE_PATH "~/.cache/RepostBot/"
+#define BASE_PATH QString("/var/lib/RepostBot/")
+
+#define STORAGE_FILE BASE_PATH + "config.json"
+#define CACHE_PATH BASE_PATH + "cache/"
+#define LOGS_DIR BASE_PATH + "logs/"
+
 
 // Create bot through @BotFather
 #define TELEGRAM_TOKEN "< Telegram token >"
+#define TELEGRAM_ADMIN <Chat id of admin>
+
 
 #define VK_TOKEN "< VK token >"
-
-
 #define VK_AUTH_ID "< VK App id >"
 #define VK_AUTH_SECRET "< VK App secret >"
 
 // If App url is present, App will receive code right after authorization(auth page will redirect to url), and no need for sending instructions about it
 #define VK_AUTH_URL "https://oauth.vk.com/blank.html"
+
+
+// Logger
+#define LOG_DATETIME_FORMAT "yyyy-MM-dd HH:mm:ss"
+#define LOGS_ZIP "logs.zip"
+#define LOG_INCLUDE_METHOD
 
 
 #endif //REPOSTBOT_VARS_H

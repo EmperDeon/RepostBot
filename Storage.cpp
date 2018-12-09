@@ -8,6 +8,7 @@
 #include "Storage.h"
 #include "vars.h"
 #include <QDebug>
+#include <utils/logs/Logger.h>
 
 void Storage::load() {
     QFile f(STORAGE_FILE);
@@ -23,16 +24,8 @@ void Storage::save() {
     if (f.open(QFile::WriteOnly)) {
         f.write(Storage::instance()->object.dumpQ(4).toUtf8());
     } else {
-        qDebug() << f.errorString();
+        logE("Couldn't open file: " + f.errorString());
     }
 
     f.close();
-}
-
-void from_json(const nlohmann::json &j, QString &p) {
-    p = QString::fromStdString(j);
-}
-
-void to_json(nlohmann::json &j, const QString &p) {
-    j = p.toStdString();
 }

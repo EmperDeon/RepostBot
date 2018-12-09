@@ -5,6 +5,7 @@
 */
 
 #include <QtCore/QTimer>
+#include <utils/logs/Logger.h>
 #include "QueueManager.h"
 
 QueueManager::QueueManager() {
@@ -30,6 +31,8 @@ void QueueManager::handlerAvailable(QueueHandler *handler) {
     QueueTask *task;
 
     if ((task = takeTask(handler->name())) != nullptr) { // If next task is present, start it immediately
+        logI("Started task: " + task->action + ", queue count: " +
+             QString::number(low_queues[handler->name()].count() + high_queues[handler->name()].count()));
         startTask(handler, task);
 
     } else { // Else add to available
@@ -42,6 +45,8 @@ void QueueManager::addTask(QString handler_name, QueueTask *task, bool low_prior
     QueueHandler *handler;
 
     if ((handler = takeAvailable(handler_name)) != nullptr) { // If there is available handler, start task
+        logI("Started task: " + task->action + ", queue count: " +
+             QString::number(low_queues[handler_name].count() + high_queues[handler_name].count()));
         startTask(handler, task);
 
     } else if (low_priority) { // Else, add to queue

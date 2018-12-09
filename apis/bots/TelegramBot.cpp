@@ -7,6 +7,7 @@
 #include <vendor/tgbot-cpp/include/tgbot/net/TgLongPoll.h>
 #include <vendor/tgbot-cpp/include/tgbot/TgException.h>
 #include <apis/handlers/VkHandler.h>
+#include <utils/logs/Logger.h>
 #include "TelegramBot.h"
 
 /* @BotFather commands
@@ -60,6 +61,10 @@ TelegramBot::TelegramBot(Runner *runner) {
         addVkTask(message, "fetchGroupsFromMe");
     });
 
+    events->onCommand("fetch_logs", [this](TgBot::Message::Ptr message) {
+        api->sendFile(TELEGRAM_ADMIN, Utils::Logger::instance()->currentLogFile());
+    });
+
 #ifdef DEBUG
     events->onCommand("force_update_vk_task", [runner](TgBot::Message::Ptr message) {
         runner->tasks()->forceLaunch("task.vk.posts");
@@ -80,7 +85,7 @@ TelegramBot::TelegramBot(Runner *runner) {
     });
 
     events->onAnyMessage([this](TgBot::Message::Ptr message) {
-        qDebug() << "Received message: " << message->text.c_str();
+        logI("Received message: " + QString::fromStdString(message->text));
     });
 }
 
@@ -102,7 +107,7 @@ void TelegramBot::handleFinished(QueueTask *task) {
         result->sendTo(user);
 
     } else {
-        qDebug() << "Result is null in Telegram for action: " << name;
+        logW("Result is null in Telegram for action: " + name);
     }
 
     delete result;

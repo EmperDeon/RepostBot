@@ -8,6 +8,7 @@
 #include <models/Posts.h>
 #include <Runner.h>
 #include <apis/handlers/VkHandler.h>
+#include <utils/logs/Logger.h>
 #include "PostsVkTask.h"
 
 PostsVkTask::PostsVkTask(Runner *runner) {
@@ -41,7 +42,7 @@ void PostsVkTask::launch() {
             QStringList to_add = temp_groups.mid(0, 25), posts_to_add;
 
             for (const auto &group : to_add) {
-                posts_to_add << last_ids[group].get<QString>(QString());
+                posts_to_add << last_ids[group].get<QStringList>(QStringList()).join(':');
                 temp_groups.removeAll(group);
             }
 
@@ -76,6 +77,7 @@ void PostsVkTask::startTask(const QString &user, const QString &name, const QStr
 void PostsVkTask::handleFinished(QueueTask *task) {
     const QString &name = task->action, &group = task->params[0];
     Posts *result = dynamic_cast<Posts *>(task->result());
+    auto &ids = storage()["last_ids"];
 
     if (result != nullptr && !result->empty()) {
         if (task->user.isEmpty()) { // Sent to all
@@ -87,19 +89,19 @@ void PostsVkTask::handleFinished(QueueTask *task) {
         }
 
         for (auto *model : result->posts) {
-            storage()["last_ids"][model->domain] = model->id();
+            ids[model->group_id].push_back(model->id()); // Creates array if empty
         }
 
         Storage::save();
 
     } else if (result == nullptr) {
-        qDebug() << "Result is null in PostsVkTask for action: " << name;
+        logW("Result is null in PostsVkTask for action: " + name);
     }
 
     tasks.removeAll(task);
 
     if (tasks.isEmpty()) {
-        qDebug() << "PostsVkTask has finished\n";
+        logI("PostsVkTask has finished");
     }
 
     delete result;
