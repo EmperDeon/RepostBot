@@ -9,6 +9,7 @@
 #include "TelegramApi.h"
 #include <tgbot/net/CurlHttpClient.h>
 #include <tgbot/net/BoostHttpOnlySslClient.h>
+#include <utils/logs/Logger.h>
 
 TelegramApi::TelegramApi() {
 #ifdef HAVE_CURL
@@ -30,11 +31,11 @@ void TelegramApi::sendMessage(int64_t to, const QString &message) {
             tg_api->sendMessage(to, split_message.toStdString(), true,
                                 0, std::make_shared<TgBot::GenericReply>(), "HTML", false);
         } catch (TgBot::TgException &e) {
-            printf("Telegram Send error: %s\n", e.what());
+            logE("Telegram Send error: " + QString(e.what()));
         } catch (boost::system::system_error const &e) {
-            printf("Boost Error: %s\n", e.what());
+            logE("Boost Error: " + QString(e.what()));
         } catch (std::runtime_error const &e) {
-            printf("Curl Error: %s\n", e.what());
+            logE("Curl Error: " + QString(e.what()));
         }
     }
 }
@@ -43,11 +44,11 @@ void TelegramApi::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> at
     try {
         tg_api->sendMediaGroup(user, attachments);
     } catch (TgBot::TgException &e) {
-        printf("Telegram Send Media error: %s\n", e.what());
+        logE("Telegram Send error: " + QString(e.what()));
     } catch (boost::system::system_error const &e) {
-        printf("Boost Error: %s\n", e.what());
+        logE("Boost Error: " + QString(e.what()));
     } catch (std::runtime_error const &e) {
-        printf("Curl Error: %s\n", e.what());
+        logE("Curl Error: " + QString(e.what()));
     }
 }
 
@@ -66,10 +67,10 @@ void TelegramApi::sendFile(int64_t user, QString path) {
     try {
         tg_api->sendDocument(user, TgBot::InputFile::fromFile(path.toStdString(), "text/plain"));
     } catch (TgBot::TgException &e) {
-        printf("Telegram Send Media error: %s\n", e.what());
+        logE("Telegram Send error: " + QString(e.what()));
     } catch (boost::system::system_error const &e) {
-        printf("Boost Error: %s\n", e.what());
+        logE("Boost Error: " + QString(e.what()));
     } catch (std::runtime_error const &e) {
-        printf("Curl Error: %s\n", e.what());
+        logE("Curl Error: " + QString(e.what()));
     }
 }

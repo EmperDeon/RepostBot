@@ -1,6 +1,6 @@
 [submodule "vendor/tgbot-cpp"]
 	path = vendor/tgbot-cpp
-	url = https://github.com/reo7sp/tgbot-cpp.git
+	url = https://github.com/EmperDeon/tgbot-cpp.git
 [submodule "vendor/verdigris"]
 	path = vendor/verdigris
 	url = https://github.com/woboq/verdigris

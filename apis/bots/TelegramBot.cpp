@@ -62,7 +62,11 @@ TelegramBot::TelegramBot(Runner *runner) {
     });
 
     events->onCommand("fetch_logs", [this](TgBot::Message::Ptr message) {
-        api->sendFile(TELEGRAM_ADMIN, Utils::Logger::instance()->currentLogFile());
+        if (message->chat->id == TELEGRAM_ADMIN) {
+            api->sendFile(TELEGRAM_ADMIN, Utils::Logger::instance()->currentLogFile());
+        } else {
+            logW(QString("Wrong user_id, expected: %1, actual: %2").arg(TELEGRAM_ADMIN).arg(message->chat->id));
+        }
     });
 
 #ifdef DEBUG
@@ -122,12 +126,12 @@ QString TelegramBot::part_at(TgBot::Message::Ptr in, int at) {
 
 void TelegramBot::run() {
     try {
-        printf("Bot username: %s\n", api->api()->getMe()->username.c_str());
+        logI("Bot username: " + QString::fromStdString(api->api()->getMe()->username));
     } catch (boost::system::system_error const &e) {
-        printf("Boost Error: %s\n", e.what());
+        logE("Boost Error: " + QString(e.what()));
         return;
     } catch (std::runtime_error const &e) {
-        printf("Curl Error: %s\n", e.what());
+        logE("Curl Error: " + QString(e.what()));
         return;
     }
 
@@ -139,11 +143,11 @@ void TelegramBot::run() {
         try {
             longPoll.start();
         } catch (TgBot::TgException &e) {
-            printf("Telegram Error: %s\n", e.what());
+            logE("Telegram Error: " + QString(e.what()));
         } catch (boost::system::system_error const &e) {
-            printf("Boost Error: %s\n", e.what());
+            logE("Boost Error: " + QString(e.what()));
         } catch (std::runtime_error const &e) {
-            printf("Curl Error: %s\n", e.what());
+            logE("Curl Error: " + QString(e.what()));
         }
     }
 #pragma clang diagnostic pop
