@@ -89,7 +89,13 @@ void PostsVkTask::handleFinished(QueueTask *task) {
         }
 
         for (auto *model : result->posts) {
-            ids[model->group_id].push_back(model->id()); // Creates array if empty
+            auto &last_ids = ids[model->group_id];
+
+            last_ids.push_back(model->id()); // Creates array if empty
+
+            for (int i = 0; i < last_ids.size() - 10; i++) {
+                last_ids.erase(last_ids.begin()); // Pop front
+            }
         }
 
         Storage::save();

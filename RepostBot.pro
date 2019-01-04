@@ -9,27 +9,30 @@ QMAKE_CXXFLAGS += -std=c++14
 
 DEFINES += "HAVE_CURL"
 
-SOURCES += main.cpp \
-  interfaces/Model.cpp \
-  apis/TelegramApi.cpp \
-  apis/bots/TelegramBot.cpp \
-  apis/VkApi.cpp \
-  apis/handlers/VkHandler.cpp \
-  models/Attachment.cpp \
-  models/Post.cpp \
-  models/Error.cpp \
-  models/Status.cpp \
-  queue/QueueManager.cpp \
-  queue/QueueTask.cpp \
-  queue/QueueHandler.cpp\
-  tasks/TaskManager.cpp \
-  tasks/vk/PostsVkTask.cpp \
-  utils/Utils.cpp \
-  utils/logs/Logger.cpp \
-  utils/Zip.cpp \
-  Storage.cpp \
-  Runner.cpp
+# SOURCES += main.cpp \
+#   interfaces/Model.cpp \
+#   apis/TelegramApi.cpp \
+#   apis/bots/TelegramBot.cpp \
+#   apis/VkApi.cpp \
+#   apis/handlers/VkHandler.cpp \
+#   models/Attachment.cpp \
+#   models/Post.cpp \
+#   models/Error.cpp \
+#   models/Status.cpp \
+#   queue/QueueManager.cpp \
+#   queue/QueueTask.cpp \
+#   queue/QueueHandler.cpp\
+#   tasks/TaskManager.cpp \
+#   tasks/vk/PostsVkTask.cpp \
+#   utils/Utils.cpp \
+#   utils/logs/Logger.cpp \
+#   utils/Zip.cpp \
+#   vendor/json/json.hpp \
+#   Storage.cpp \
+#   Runner.cpp
 
+# Unity build
+SOURCES += cmake-build-debug/cotire/RepostBot_CXX_unity.cxx
 
 LIBS += -L$$PWD/vendor/libs-linux-64/
 

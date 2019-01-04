@@ -32,6 +32,7 @@ TelegramBot::TelegramBot(Runner *runner) {
     queue = runner->queue();
     auto *events = api->events();
 
+
     /*
      * Authorization
      * */
@@ -43,6 +44,7 @@ TelegramBot::TelegramBot(Runner *runner) {
     events->onCommand("vk_set_code", [this](TgBot::Message::Ptr message) {
         addVkTask(message, "setAuthCode", {part_at(message, 1)});
     });
+
 
     /*
      * Subscription
@@ -69,11 +71,14 @@ TelegramBot::TelegramBot(Runner *runner) {
         }
     });
 
-#ifdef DEBUG
     events->onCommand("force_update_vk_task", [runner](TgBot::Message::Ptr message) {
-        runner->tasks()->forceLaunch("task.vk.posts");
+        if (message->chat->id == TELEGRAM_ADMIN) {
+            runner->tasks()->forceLaunch("task.vk.posts");
+        } else {
+            logW(QString("Wrong user_id, expected: %1, actual: %2").arg(TELEGRAM_ADMIN).arg(message->chat->id));
+        }
     });
-#endif
+
 
     /*
      * Other

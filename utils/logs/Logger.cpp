@@ -38,7 +38,7 @@ void Utils::Logger::log(Utils::Logger::Level lev, const QDateTime &time, const Q
         logger->save();
 
 #ifdef DEBUG
-    if (lev != Verbose)
+    if (lev != Verbose && lev != Debug)
         if (lev == Error || lev == Warning) {
             fprintf(stderr, "%s\n", entry.toStdString().c_str());
         } else {
