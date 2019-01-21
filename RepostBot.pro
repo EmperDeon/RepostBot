@@ -4,7 +4,7 @@ TARGET   = RepostBot
 QT += core network
 
 CONFIG += c++14
-QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -std=c++14 -Wno-unknown-pragmas
 
 
 DEFINES += "HAVE_CURL"

@@ -27,7 +27,7 @@ nlohmann::json VkApi::request(const QString &method, const nlohmann::json &param
         q.addQueryItem("access_token", user_token);
     }
 
-    q.addQueryItem("v", "5.84");
+    q.addQueryItem("v", "5.92");
 
     for (const auto &it : params.items()) {
         q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));
@@ -47,7 +47,7 @@ nlohmann::json VkApi::requestAuth(const QString &method, const nlohmann::json &p
     q.addQueryItem("client_id", VK_AUTH_ID);
     q.addQueryItem("client_secret", VK_AUTH_SECRET);
     q.addQueryItem("redirect_uri", VK_AUTH_URL);
-    q.addQueryItem("v", "5.84");
+    q.addQueryItem("v", "5.92");
 
     for (const auto &it : params.items()) {
         q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));

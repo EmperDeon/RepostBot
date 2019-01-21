@@ -36,6 +36,9 @@ int main(int argc, char **argv) {
     auto *storage = Storage::instance();
     auto *app = Runner::instance();
 
+    Q_UNUSED(logger)
+    Q_UNUSED(storage)
+
     app->start();
 
     return QCoreApplication::exec();

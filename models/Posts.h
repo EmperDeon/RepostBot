@@ -28,7 +28,7 @@ public:
             post->sendTo(user);
     }
 
-    ~Posts() {
+    ~Posts() override {
         for (auto *post : posts)
             delete post;
     }

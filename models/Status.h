@@ -17,6 +17,8 @@ public:
     explicit Status(const QString &s) : string(s) {}
 
     QString toString() const override { return string; }
+
+    ~Status() override = default;
 };
 
 

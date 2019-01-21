@@ -88,7 +88,7 @@ TelegramBot::TelegramBot(Runner *runner) {
         api->sendHelp(message->chat->id);
     });
 
-    events->onCommand("export", [this](TgBot::Message::Ptr message) {
+    events->onCommand("export", [this](TgBot::Message::Ptr) {
         // Send list of commands to execute/json to import.
         // Json will be better i think
     });

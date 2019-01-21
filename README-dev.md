@@ -105,7 +105,7 @@ Can take only 20 groups
 
 
 ```javascript
-var POSTS_COUNT = 10;
+var POSTS_COUNT = 7;
 
 var group_ids = Args.group_ids.split(",");
 var post_ids_joined = Args.post_ids.split(",");
@@ -119,9 +119,9 @@ while (ig < groups_count) {
     var ip = 0;
 
     if (group_id.substr(0,1) == "-") {
-        posts = API.wall.get({count: POSTS_COUNT, filter: "owner", v: "5.85", owner_id: group_id}).items;
+        posts = API.wall.get({count: POSTS_COUNT, filter: "owner", v: "5.92", owner_id: group_id}).items;
     } else {
-        posts = API.wall.get({count: POSTS_COUNT, filter: "owner", v: "5.85", domain: group_id}).items;
+        posts = API.wall.get({count: POSTS_COUNT, filter: "owner", v: "5.92", domain: group_id}).items;
     }
 
     var posts_count = posts.length;

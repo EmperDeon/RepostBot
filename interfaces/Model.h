@@ -34,6 +34,8 @@ public:
 
     // Sending
     virtual void sendTo(const User &user);
+
+    virtual ~Model() = default;
 };
 
 #endif //REPOSTBOT_MODEL_H

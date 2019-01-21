@@ -93,7 +93,7 @@ void PostsVkTask::handleFinished(QueueTask *task) {
 
             last_ids.push_back(model->id()); // Creates array if empty
 
-            for (int i = 0; i < last_ids.size() - 10; i++) {
+            for (unsigned int i = 0; i < last_ids.size() - 10; i++) {
                 last_ids.erase(last_ids.begin()); // Pop front
             }
         }

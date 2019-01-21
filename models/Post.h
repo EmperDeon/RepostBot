@@ -23,6 +23,8 @@ public:
     explicit Post(const json &obj);
 
     QString toString() const override;
+
+    ~Post() override = default;
 };
 
 #endif //REPOSTBOT_POST_H

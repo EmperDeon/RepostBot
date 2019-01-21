@@ -20,7 +20,7 @@ void TaskManager::start() {
     startTimer(30000);
 }
 
-void TaskManager::timerEvent(QTimerEvent *e) {
+void TaskManager::timerEvent(QTimerEvent *) {
     json &last_launched = storage()["last_launched"];
 
     if (last_launched.is_null()) {

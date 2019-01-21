@@ -7,11 +7,9 @@
 #pragma ide diagnostic ignored "CannotResolve"
 
 #ifdef JSON_APPEND_HEADER
-
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QList>
-
 #endif
 
 
@@ -90,7 +88,7 @@ size_type erase(const char *key) {
 }
 
 size_type erase(const QString &key) {
-    erase(key.toUtf8().data());
+    return erase(key.toUtf8().data());
 }
 
 QString dumpQ(int indent = -1) const {
@@ -162,7 +160,7 @@ void from_json(const nlohmann::json &j, QStringList &l) {
 }
 
 void to_json(nlohmann::json &j, const QStringList &l) {
-    for (const auto &str : j) {
+    for (const auto &str : l) {
         j.push_back(str);
     }
 }

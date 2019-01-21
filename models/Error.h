@@ -22,6 +22,8 @@ public:
     explicit Error(const json &obj);
 
     QString toString() const override { return error; }
+
+    ~Error() override = default;
 };
 
 
