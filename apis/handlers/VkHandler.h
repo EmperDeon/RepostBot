@@ -8,12 +8,12 @@
 
 #include <apis/VkApi.h>
 #include <Runner.h>
+#include <apis/handlers/vk/VkAuth.h>
 
-
-#define VK_AUTH_DEFAULT_URL "https://oauth.vk.com/blank.html"
 
 class VkHandler : public QueueHandler {
     VkApi *api;
+    VkAuth *auth;
 
 public:
     VkHandler();
@@ -66,23 +66,11 @@ public:
      * */
     void fetchGroupsFromMe(QueueTask *task);
 
-    /*
-     * Sends login instructions or removes existing Token
-     * */
-    void toggleAuth(QueueTask *task, bool adding);
-
-    /*
-     * Gets new token from authorization code
-     * */
-    void setAuthCode(QueueTask *task, const QString &code);
-
 
 protected:
-    QString authUrl();
+    int groupsLimitFor(User *u);
 
-    QString defaultAuthUrl() { return VK_AUTH_DEFAULT_URL; }
-
-    bool isAuthUrlDefault();
+    bool isReachedLimit(QueueTask *task);
 };
 
 

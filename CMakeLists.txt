@@ -45,7 +45,7 @@ set(TEST_SOURCES
 
 add_executable(RepostBot
         apis/TelegramApi.cpp apis/bots/TelegramBot.cpp
-        apis/VkApi.cpp apis/handlers/VkHandler.cpp
+        apis/VkApi.cpp apis/handlers/VkHandler.cpp apis/handlers/vk/VkAuth.cpp
 
         interfaces/Model.cpp
 

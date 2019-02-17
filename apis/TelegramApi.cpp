@@ -10,6 +10,8 @@
 #include <tgbot/net/CurlHttpClient.h>
 #include <tgbot/net/BoostHttpOnlySslClient.h>
 #include <utils/logs/Logger.h>
+#include <QtCore/QThread>
+
 
 TelegramApi::TelegramApi() {
 #ifdef HAVE_CURL
@@ -30,8 +32,15 @@ void TelegramApi::sendMessage(int64_t to, const QString &message) {
         try {
             tg_api->sendMessage(to, split_message.toStdString(), true,
                                 0, std::make_shared<TgBot::GenericReply>(), "HTML", false);
+            QThread::currentThread()->sleep(3);
+
         } catch (TgBot::TgException &e) {
-            logE("Telegram Send error: " + QString(e.what()));
+            auto error = QString(e.what());
+            logE("Telegram Send error: " + error);
+
+            if (error.startsWith("Too Many Requests")) {
+                QThread::currentThread()->sleep(30);
+            }
         } catch (boost::system::system_error const &e) {
             logE("Boost Error: " + QString(e.what()));
         } catch (std::runtime_error const &e) {
@@ -43,8 +52,16 @@ void TelegramApi::sendMessage(int64_t to, const QString &message) {
 void TelegramApi::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments) {
     try {
         tg_api->sendMediaGroup(user, attachments);
+        QThread::currentThread()->sleep(3);
+
     } catch (TgBot::TgException &e) {
-        logE("Telegram Send error: " + QString(e.what()));
+        auto error = QString(e.what());
+        logE("Telegram Send error: " + error);
+
+        if (error.startsWith("Too Many Requests")) {
+            QThread::currentThread()->sleep(30);
+        }
+
     } catch (boost::system::system_error const &e) {
         logE("Boost Error: " + QString(e.what()));
     } catch (std::runtime_error const &e) {
@@ -66,6 +83,8 @@ void TelegramApi::sendHelp(int64_t to) {
 void TelegramApi::sendFile(int64_t user, QString path) {
     try {
         tg_api->sendDocument(user, TgBot::InputFile::fromFile(path.toStdString(), "text/plain"));
+        QThread::currentThread()->sleep(3);
+
     } catch (TgBot::TgException &e) {
         logE("Telegram Send error: " + QString(e.what()));
     } catch (boost::system::system_error const &e) {

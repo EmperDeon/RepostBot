@@ -80,26 +80,27 @@ void PostsVkTask::handleFinished(QueueTask *task) {
     auto &ids = storage()["last_ids"];
 
     if (result != nullptr && !result->empty()) {
-        if (task->user.isEmpty()) { // Sent to all
-            for (const auto &user_id : usersWithGroup(group)) {
-                result->sendTo(User(user_id));
-            }
-        } else { // Sent to user
-            result->sendTo(task->user);
-        }
-
         for (auto *model : result->posts) {
+            if (task->user.isEmpty()) { // Sent to all
+                for (const auto &user_id : usersWithGroup(group)) {
+                    model->sendTo(User(user_id));
+                }
+            } else { // Sent to user
+                model->sendTo(task->user);
+            }
+
             auto &last_ids = ids[model->group_id];
 
             last_ids.push_back(model->id()); // Creates array if empty
 
-            for (unsigned int i = 0; i < last_ids.size() - 10; i++) {
-                last_ids.erase(last_ids.begin()); // Pop front
+            if (last_ids.size() > 10) {
+                for (unsigned int i = 0; i < last_ids.size() - 10; i++) {
+                    last_ids.erase(last_ids.begin()); // Pop front
+                }
             }
+
+            Storage::save();
         }
-
-        Storage::save();
-
     } else if (result == nullptr) {
         logW("Result is null in PostsVkTask for action: " + name);
     }

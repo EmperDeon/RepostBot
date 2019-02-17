@@ -10,6 +10,7 @@
 
 VkHandler::VkHandler() {
     api = new VkApi;
+    auth = new VkAuth(api);
 }
 
 void VkHandler::action(QueueTask *task) {
@@ -17,10 +18,10 @@ void VkHandler::action(QueueTask *task) {
     const QStringList &params = task->params;
 
     if (name == "toggleAuth") {
-        toggleAuth(task, params[0] == "true");
+        auth->toggleAuth(task, params[0] == "true");
 
     } else if (name == "setAuthCode") {
-        setAuthCode(task, params[0]);
+        auth->setAuthCode(task, params[0]);
 
     } else if (name == "updateGroupNames") {
         updateGroupNames(task);
@@ -208,6 +209,10 @@ void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, b
         task->setResult(new Status("Unsubscribed from group \"" + human_name + "\""));
 
     } else if (!groups.has_value(group_name.toStdString())) {
+        if (isReachedLimit(task)) {
+            TASK_ERROR("Reached limit of groups");
+        }
+
         groups += group_name;
         task->setResult(new Status("Subscribed to group \"" + human_name + "\""));
 
@@ -216,6 +221,8 @@ void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, b
     }
 
     Storage::save();
+
+    listSubscriptions(task);
 }
 
 void VkHandler::listSubscriptions(QueueTask *task) {
@@ -239,6 +246,14 @@ void VkHandler::listSubscriptions(QueueTask *task) {
         QString s("%1 - %2");
         ids << s.arg(group["name"].get<QString>()).arg(group["screen_name"].get<QString>());
     }
+    ids << "\nCan add " +
+           QString::number(groupsLimitFor(&task->user) - api->storage()["groups"][task->user.id].size()) +
+           " more groups";
+
+    if (isReachedLimit(task)) {
+        ids
+                << "Due to limitations of VK wall.get API, server can successfully make only 5000 requests in 1 day, which is 'get each of 100 groups every 30 minutes'";
+    }
 
     TASK_STATUS(ids.join('\n'));
 }
@@ -254,10 +269,14 @@ void VkHandler::fetchGroupsFromMe(QueueTask *task) {
         TASK_ERROR("User not logged in");
     }
 
-    json response = api->request("groups.get", {{"count",    "1000"},
+    json response = api->request("groups.get", {{"count",    "100"},
                                                 {"extended", "1"}}, &task->user);
 
     for (const json &group : response["/response/items"_json_pointer]) {
+        if (isReachedLimit(task)) {
+            break;
+        }
+
         QString name = group["screen_name"];
 
         if (name.startsWith("club")) {
@@ -277,70 +296,11 @@ void VkHandler::fetchGroupsFromMe(QueueTask *task) {
     listSubscriptions(task);
 }
 
-void VkHandler::toggleAuth(QueueTask *task, bool adding) {
-    json &tokens = api->storage()["tokens"];
-
-    if (task->user.isEmpty()) {
-        TASK_ERROR("No User is passed");
-    }
-
-    if (adding) {
-        if (!tokens.has_key(task->user.id)) {
-            if (isAuthUrlDefault()) {
-                QString message("<a href=\"%1\">Click to authorize in VK</a>\n\n"
-                                "After successful authorization you will be redirected to %2\n"
-                                "To finish authorization you need to copy parameter 'code' from address and send message /vk_set_code with code to me\n"
-                                "Example: /vk_set_code 1a2b3c4d5e6f7g8h9i0j");
-                TASK_STATUS(message.arg(authUrl()).arg(defaultAuthUrl()));
-            } else {
-                TASK_STATUS("<a href=\"" + authUrl() + "\">Click to authorize in VK</a>");
-            }
-        } else {
-            TASK_STATUS("You are already authorized");
-        }
-
-    } else {
-        if (tokens.has_key(task->user.id)) {
-            tokens.erase(task->user.id);
-            Storage::save();
-
-            TASK_STATUS("Logged out");
-        } else {
-            TASK_STATUS("Not logged in");
-        }
-    }
+int VkHandler::groupsLimitFor(User *user) {
+    bool has_token = user != nullptr && !user->isEmpty() && api->storage()["tokens"].has_key(user->id);
+    return has_token ? 100 : 10;
 }
 
-void VkHandler::setAuthCode(QueueTask *task, const QString &code) {
-    json &tokens = api->storage()["tokens"];
-
-    if (code.isEmpty()) {
-        TASK_ERROR("No Code is passed");
-    }
-
-    json response = api->requestAuth("access_token", {{"code", code}});
-
-    if (response.has_key("error")) {
-        TASK_ERROR("Error, try reauth");
-    }
-
-    tokens[task->user.id] = response["access_token"];
-    Storage::save();
-
-    // TODO: Verify that user token works
-    response = api->request("users.get", {{"user_ids", std::to_string(response["user_id"].get<int>())}}, &task->user);
-
-    TASK_STATUS(QString("Logged in as %1 %2").arg(response["/response/0/first_name"_json_pointer].get<QString>()).arg(
-            response["/response/0/last_name"_json_pointer].get<QString>()));
-}
-
-QString VkHandler::authUrl() {
-    return QString(
-            "https://oauth.vk.com/authorize?client_id=%1&scope=groups,offline&redirect_uri=%2&display=page&v=5.84&response_type=code")
-            .arg(VK_AUTH_ID)
-            .arg(VK_AUTH_URL);
-}
-
-bool VkHandler::isAuthUrlDefault() {
-    return QString(VK_AUTH_URL) == VK_AUTH_DEFAULT_URL;
+bool VkHandler::isReachedLimit(QueueTask *task) {
+    return api->storage()["groups"][task->user.id].size() >= groupsLimitFor(&task->user);
 }

@@ -1,6 +1,7 @@
 .idea
 cmake-build-*
+build
+vendor/libs*
+
 vars.h
 !vars.h.example
-build/*
-vendor/libs*
