@@ -10,6 +10,7 @@
 #include <tests/TestUtils.h>
 #include <apis/bots/TelegramBot.h>
 #include <apis/handlers/VkHandler.h>
+#include <apis/handlers/TelegramHandler.h>
 
 Runner::Runner() {
     storage = Storage::instance();
@@ -19,16 +20,15 @@ Runner::Runner() {
 }
 
 void Runner::start() {
+    api_telegram = new TelegramApi;
 
-    handlers = {new VkHandler()};
+    handlers = {new VkHandler, new TelegramHandler(api_telegram)};
     manager->addHandlers(handlers);
 
-    bots = {{"Telegram", new TelegramBot(this)}};
+    bots = {{"Telegram", new TelegramBot(this, api_telegram)}};
     for (Bot *bot : bots.values()) {
         bot->start();
     }
-
-    api_telegram = dynamic_cast<TelegramBot *>(bots["Telegram"])->api;
 
     tasks_manager->start();
 }

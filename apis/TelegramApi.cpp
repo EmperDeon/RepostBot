@@ -25,48 +25,27 @@ TelegramApi::TelegramApi() {
     tg_events = &tg_bot->getEvents();
 }
 
-void TelegramApi::sendMessage(int64_t to, const QString &message) {
+void TelegramApi::sendMessage(int64_t user, const QString &message) {
     QStringList messages = Utils::splitMessageTo(message, 4096);
 
     for (const QString &split_message : messages) {
-        try {
-            tg_api->sendMessage(to, split_message.toStdString(), true,
+        send([user, split_message](const TgBot::Api *api) {
+            api->sendMessage(user, split_message.toStdString(), true,
                                 0, std::make_shared<TgBot::GenericReply>(), "HTML", false);
-            QThread::currentThread()->sleep(3);
-
-        } catch (TgBot::TgException &e) {
-            auto error = QString(e.what());
-            logE("Telegram Send error: " + error);
-
-            if (error.startsWith("Too Many Requests")) {
-                QThread::currentThread()->sleep(30);
-            }
-        } catch (boost::system::system_error const &e) {
-            logE("Boost Error: " + QString(e.what()));
-        } catch (std::runtime_error const &e) {
-            logE("Curl Error: " + QString(e.what()));
-        }
+        });
     }
 }
 
 void TelegramApi::sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments) {
-    try {
-        tg_api->sendMediaGroup(user, attachments);
-        QThread::currentThread()->sleep(3);
+    send([user, attachments](const TgBot::Api *api) {
+        api->sendMediaGroup(user, attachments);
+    });
+}
 
-    } catch (TgBot::TgException &e) {
-        auto error = QString(e.what());
-        logE("Telegram Send error: " + error);
-
-        if (error.startsWith("Too Many Requests")) {
-            QThread::currentThread()->sleep(30);
-        }
-
-    } catch (boost::system::system_error const &e) {
-        logE("Boost Error: " + QString(e.what()));
-    } catch (std::runtime_error const &e) {
-        logE("Curl Error: " + QString(e.what()));
-    }
+void TelegramApi::sendFile(int64_t user, QString path) {
+    send([user, path](const TgBot::Api *api) {
+        api->sendDocument(user, TgBot::InputFile::fromFile(path.toStdString(), "text/plain"));
+    });
 }
 
 void TelegramApi::sendHelp(int64_t to) {
@@ -80,13 +59,19 @@ void TelegramApi::sendHelp(int64_t to) {
                     "/fetch_groups_from_me - Subscribe to all groups from user, requires login");
 }
 
-void TelegramApi::sendFile(int64_t user, QString path) {
+void TelegramApi::send(std::function<void(const TgBot::Api *)> sender) {
     try {
-        tg_api->sendDocument(user, TgBot::InputFile::fromFile(path.toStdString(), "text/plain"));
-        QThread::currentThread()->sleep(3);
+        sender(tg_api);
 
+        QThread::currentThread()->sleep(3);
     } catch (TgBot::TgException &e) {
-        logE("Telegram Send error: " + QString(e.what()));
+        auto error = QString(e.what());
+        logE("Telegram Send error: " + error);
+
+        if (error.startsWith("Too Many Requests")) {
+            QThread::currentThread()->sleep(30);
+        }
+
     } catch (boost::system::system_error const &e) {
         logE("Boost Error: " + QString(e.what()));
     } catch (std::runtime_error const &e) {

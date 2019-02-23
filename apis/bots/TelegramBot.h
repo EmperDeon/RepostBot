@@ -18,7 +18,7 @@ class TelegramBot : public Bot {
     QList<QueueTask *> tasks;
 
 public:
-    TelegramBot(Runner *runner);
+    TelegramBot(Runner *runner, TelegramApi *a);
 
     void run() override;
 

@@ -27,8 +27,7 @@
  * fetch_groups_from_me - Subscribe to all groups from user, requires login
  * */
 
-TelegramBot::TelegramBot(Runner *runner) {
-    api = new TelegramApi;
+TelegramBot::TelegramBot(Runner *runner, TelegramApi *a) : api(a) {
     queue = runner->queue();
     auto *events = api->events();
 

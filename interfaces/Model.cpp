@@ -8,21 +8,15 @@
 #include <queue/QueueTask.h>
 #include <Runner.h>
 #include <tgbot/Api.h>
+#include <models/ReplyModel.h>
 
 void Model::sendTo(const User &user) {
     if (user.isTelegram()) {
-        auto *tg = Runner::instance()->telegramApi();
+        auto *queue = Runner::instance()->queue();
+        auto *task = new QueueTask(user, "sendModel");
 
-        tg->sendMessage(user.toTg(), toString());
-
-        if (!attachments.isEmpty()) {
-            std::vector<TgBot::InputMedia::Ptr> media;
-            for (auto *attach : attachments) {
-                media.push_back(attach->toTg());
-            }
-
-            tg->sendMedia(user.toTg(), media);
-        }
+        task->setResult(new ReplyModel(this), false);
+        queue->addTask("Telegram", task);
     } else {
         puts("Unsupported User\n");
     }

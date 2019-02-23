@@ -19,18 +19,22 @@ class Attachment;
 class Model {
 protected:
     QString model_id;
-    QList<Attachment *> attachments;
+    QList<Attachment *> model_attachments;
 
 public:
     // Getters/Setters
     QString id() const { return model_id; }
+
+    QList<Attachment *> attachments() const { return model_attachments; }
+
 
     // Text to send through messenger
     virtual QString toString() const { return ""; };
 
     virtual bool empty() { return model_id.isEmpty(); }
 
-    void setAttachments(const QList<Attachment *> &list) { attachments = list; }
+    void setAttachments(const QList<Attachment *> &list) { model_attachments = list; }
+
 
     // Sending
     virtual void sendTo(const User &user);

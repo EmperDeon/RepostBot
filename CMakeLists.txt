@@ -40,19 +40,15 @@ set(TEST_SOURCES
         tests/queue/QueueHelper.cpp tests/TestHelper.cpp
         tests/queue/TestQueue1.cpp tests/queue/TestQueue2.cpp
         tests/TestUtils.cpp
-        tests/TestAttachment.cpp
-        )
+        tests/TestAttachment.cpp)
 
 add_executable(RepostBot
-        apis/TelegramApi.cpp apis/bots/TelegramBot.cpp
+        apis/TelegramApi.cpp apis/bots/TelegramBot.cpp apis/handlers/TelegramHandler.cpp
         apis/VkApi.cpp apis/handlers/VkHandler.cpp apis/handlers/vk/VkAuth.cpp
 
         interfaces/Model.cpp
 
         models/Attachment.cpp models/Post.cpp models/Error.cpp models/Status.cpp
-
-        Storage.cpp Runner.cpp
-        utils/Zip.cpp utils/logs/Logger.cpp
 
         queue/QueueManager.cpp queue/QueueTask.cpp queue/QueueHandler.cpp
 
@@ -60,9 +56,11 @@ add_executable(RepostBot
         tasks/vk/PostsVkTask.cpp
 
         utils/Utils.cpp
+        utils/Zip.cpp utils/logs/Logger.cpp
 
         ${TEST_SOURCES}
 
+        Storage.cpp Runner.cpp
         main.cpp)
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)

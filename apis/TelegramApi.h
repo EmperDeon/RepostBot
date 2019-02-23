@@ -25,9 +25,11 @@ public:
     TgBot::EventBroadcaster *events() { return tg_events; }
 
 
+    void send(std::function<void(const TgBot::Api *)> sender);
+
     void sendHelp(int64_t to);
 
-    void sendMessage(int64_t to, const QString &message);
+    void sendMessage(int64_t user, const QString &message);
 
     void sendMedia(int64_t user, std::vector<TgBot::InputMedia::Ptr> attachments);
 
