@@ -13,14 +13,12 @@
 
 
 class Attachment : public QObject {
-    QNetworkAccessManager manager;
-
     QString type, url, filename;
 
 public:
     Attachment(const QString &_type, const QString &_url);
 
-    virtual QString downloadFile(const QString &url);
+    static QString downloadFile(const QString &url);
 
     virtual TgBot::InputMedia::Ptr toTg();
 };

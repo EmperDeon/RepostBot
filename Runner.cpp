@@ -7,7 +7,6 @@
 #include "Runner.h"
 #include <QDebug>
 #include <tasks/vk/PostsVkTask.h>
-#include <tests/TestUtils.h>
 #include <apis/bots/TelegramBot.h>
 #include <apis/handlers/VkHandler.h>
 #include <apis/handlers/TelegramHandler.h>

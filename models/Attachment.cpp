@@ -15,8 +15,14 @@
 Attachment::Attachment(const QString &_type, const QString &_url) : type(_type), url(_url) {}
 
 QString Attachment::downloadFile(const QString &url) {
+    QNetworkAccessManager manager;
+
     auto reply = manager.get(QNetworkRequest(url));
+
     QDir dir(CACHE_PATH);
+    if (!dir.exists()) {
+        QDir(BASE_PATH).mkdir("cache");
+    }
 
     QEventLoop loop;
     QTimer::singleShot(240'000, &loop, &QEventLoop::quit);

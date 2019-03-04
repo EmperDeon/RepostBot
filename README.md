@@ -21,3 +21,20 @@ Launched on my own server as [@VkRepost2Bot](https://t.me/VkRepost2Bot).
 - xkcd.com
 - rtut.io
 - pikabu.ru
+
+
+# Build
+
+## Dependencies
+
+- C++11 supporting compiler
+
+- Curl library
+- Qt 5.11 (Core, Network)
+
+- Cotire (Included)
+- Verdigris (Included)
+- TgBot library (Included)
+- Minizip (Included)
+- Nlohmann's Json (Included)
+- Catch2 (Included)

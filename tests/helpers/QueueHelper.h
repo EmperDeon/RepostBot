@@ -27,5 +27,23 @@ public:
     void test2(QueueTask *task, QString str, int i);
 };
 
+class TestQueueCounter : public QObject {
+    W_OBJECT(TestQueueCounter)
+
+    QMutex mutex;
+    int count_finished = 0, count = 0, all_count;
+
+public:
+    explicit TestQueueCounter(int count) : all_count(count) {}
+
+    void finished() W_SIGNAL(finished)
+
+    void futureCatcher(QueueTask *task);
+
+    bool successful() { return all_count == count && all_count == count_finished; }
+
+    std::string counts();
+};
+
 
 #endif //REPOSTBOT_QUEUEHELPER_H

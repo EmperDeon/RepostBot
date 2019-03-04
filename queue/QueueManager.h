@@ -9,7 +9,6 @@
 
 #include <QtCore/QMap>
 #include <QtCore/QQueue>
-#include <tests/TestCase.h>
 #include "QueueTask.h"
 #include "QueueHandler.h"
 
@@ -49,8 +48,6 @@ protected:
     QueueTask *takeTask(QString handler_name);
 
     void startTask(QueueHandler *handler, QueueTask *task);
-
-TEST_HELPER
 };
 
 

@@ -5,6 +5,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(RepostBot)
 
+#
+# Options
+#
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -15,34 +19,33 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor")
 # Minizip
 set(USE_BZIP2 OFF)
 
-find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
+#
+# Includes
+#
 
+find_package(Qt5 COMPONENTS Core Network REQUIRED)
 message(STATUS "Qt version: " ${Qt5_VERSION})
 
 ## curl
-find_package(CURL)
-if (CURL_FOUND)
-    include_directories(${CURL_INCLUDE_DIRS})
-    add_definitions(-DHAVE_CURL)
-endif ()
-
-if (DEBUG_BUILD)
-    add_definitions(-DDEBUG)
-endif ()
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+add_definitions(-DHAVE_CURL)
 
 include(cotire/CMake/cotire)
 add_subdirectory(vendor/tgbot-cpp)
 add_subdirectory(vendor/minizip)
 include_directories(vendor/tgbot-cpp/include)
-include_directories(vendor/)
+include_directories(vendor)
 
-set(TEST_SOURCES
-        tests/queue/QueueHelper.cpp tests/TestHelper.cpp
-        tests/queue/TestQueue1.cpp tests/queue/TestQueue2.cpp
-        tests/TestUtils.cpp
-        tests/TestAttachment.cpp)
+if (DEBUG_BUILD)
+    add_definitions(-DDEBUG)
+endif ()
 
-add_executable(RepostBot
+#
+# Sources
+#
+
+set(SOURCES
         apis/TelegramApi.cpp apis/bots/TelegramBot.cpp apis/handlers/TelegramHandler.cpp
         apis/VkApi.cpp apis/handlers/VkHandler.cpp apis/handlers/vk/VkAuth.cpp
 
@@ -58,12 +61,43 @@ add_executable(RepostBot
         utils/Utils.cpp
         utils/Zip.cpp utils/logs/Logger.cpp
 
-        ${TEST_SOURCES}
-
         Storage.cpp Runner.cpp
-        main.cpp)
+        )
+
+set(TEST_SOURCES
+        tests/main.cpp
+
+        # Helpers
+        tests/helpers/QueueHelper.cpp
+
+        # Tests
+        tests/queue/QueueTest.cpp
+        tests/apis/VkApiTest.cpp
+
+        tests/ModelsTest.cpp
+        tests/UtilsTest.cpp
+        )
+
+#
+# Targets
+#
+
+add_executable(RepostBot main.cpp ${SOURCES})
+add_executable(RepostBot_test ${SOURCES} ${TEST_SOURCES})
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
 target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot libminizip ssl crypto)
 
+target_compile_definitions(RepostBot_test PRIVATE CATCH_CONFIG_RUNNER=1)
+set_target_properties(RepostBot_test PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
+target_link_libraries(RepostBot_test Qt5::Core Qt5::Network TgBot libminizip ssl crypto)
+
 cotire(RepostBot)
+cotire(RepostBot_test)
+
+#
+# Testing
+#
+
+enable_testing()
+add_test(NAME RunTests COMMAND ReportBot_test_unity)

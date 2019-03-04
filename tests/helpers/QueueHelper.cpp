@@ -35,3 +35,32 @@ void TestQueueHandler::test2(QueueTask *task, QString str, int i) {
     str = QString("String - %1, Int - %2").arg(str).arg(i);
     task->setResult(new Status(str), true);
 }
+
+
+void TestQueueCounter::futureCatcher(QueueTask *task) {
+    QMutexLocker lock(&this->mutex);
+
+    count++;
+
+    if (task->isFinished()) {
+        count_finished++;
+    }
+
+    delete task->result();
+    task->deleteLater();
+
+    if (count_finished == all_count) {
+        lock.unlock();
+        emit finished();
+    }
+}
+
+std::string TestQueueCounter::counts() {
+    std::ostringstream out;
+
+    out << "All count: " << all_count << ", Catched: " << count << ", Finished: " << count_finished << '\n';
+
+    return out.str();
+}
+
+W_OBJECT_IMPL(TestQueueCounter)
