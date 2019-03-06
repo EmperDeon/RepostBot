@@ -63,13 +63,13 @@ void TelegramApi::send(std::function<void(const TgBot::Api *)> sender) {
     try {
         sender(tg_api);
 
-        QThread::currentThread()->sleep(3);
+        std::this_thread::sleep_for(TG_API_DELAY);
     } catch (TgBot::TgException &e) {
         auto error = QString(e.what());
         logE("Telegram Send error: " + error);
 
         if (error.startsWith("Too Many Requests")) {
-            QThread::currentThread()->sleep(30);
+            std::this_thread::sleep_for(TG_API_DELAY_LONG);
         }
 
     } catch (boost::system::system_error const &e) {

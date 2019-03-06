@@ -10,36 +10,24 @@
 #include <QtCore/QTimer>
 #include <vars.h>
 #include <QtCore/QDir>
+#include <curl/curl.h>
+#include <utils/Curl.h>
+#include <utils/Utils.h>
 #include "Attachment.h"
 
 Attachment::Attachment(const QString &_type, const QString &_url) : type(_type), url(_url) {}
 
-QString Attachment::downloadFile(const QString &url) {
-    QNetworkAccessManager manager;
-
-    auto reply = manager.get(QNetworkRequest(url));
-
-    QDir dir(CACHE_PATH);
+std::string Attachment::downloadFile(const QString &url) {
+    QDir dir(CACHE_PATH.c_str());
     if (!dir.exists()) {
-        QDir(BASE_PATH).mkdir("cache");
+        QDir(BASE_PATH.c_str()).mkdir("cache");
     }
 
-    QEventLoop loop;
-    QTimer::singleShot(240'000, &loop, &QEventLoop::quit);
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+    std::string file_path = Curl(url.toStdString()).getToDir(dir.absolutePath().toStdString());
 
-    QFile file(dir.absoluteFilePath(url.mid(url.lastIndexOf('/') + 1)));
-    if (file.open(QFile::WriteOnly)) {
-        file.write(reply->readAll());
-
-        reply->deleteLater();
-
-        return file.fileName();
-
+    if (Utils::fileExists(file_path)) {
+        return file_path;
     } else {
-        reply->deleteLater();
-
         return "";
     }
 }

@@ -9,12 +9,16 @@
 #include <vars.h>
 #include <models/Post.h>
 #include <interfaces/User.h>
+#include <utils/Curl.h>
 
 
 class VkApi {
+    std::string default_token;
+    bool no_delay;
 
 public:
-    VkApi() = default;
+    VkApi(std::string default_token, bool no_delay = false) : default_token(std::move(default_token)),
+                                                              no_delay(no_delay) {};
 
     json &storage() { return Storage::instance()->value("vk"); };
 
@@ -26,13 +30,13 @@ public:
      *
      * Returns json response
      * */
-    json request(const QString &method, const json &params = {}, User *user = nullptr);
+    json request(const std::string &method, Curl::params_type params = {}, User *user = nullptr);
 
 
     /*
      * Ordinary request, but without token
      * */
-    json requestAuth(const QString &method, const json &params = {});
+    json requestAuth(const std::string &method, Curl::params_type params = {});
 
 
     /*
@@ -47,7 +51,12 @@ protected:
     /*
      * Do a request to url, and return parsed response
      */
-    json vk_request(const QUrl &url);
+    json vk_request(const std::string &url, Curl::params_type params);
+
+    /*
+     * Get User token or default
+     */
+    std::string token_for_user(User *user);
 };
 
 

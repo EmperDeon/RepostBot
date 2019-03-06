@@ -58,7 +58,7 @@ set(SOURCES
         tasks/TaskManager.cpp
         tasks/vk/PostsVkTask.cpp
 
-        utils/Utils.cpp
+        utils/Utils.cpp utils/Curl.cpp
         utils/Zip.cpp utils/logs/Logger.cpp
 
         Storage.cpp Runner.cpp
@@ -86,11 +86,11 @@ add_executable(RepostBot main.cpp ${SOURCES})
 add_executable(RepostBot_test ${SOURCES} ${TEST_SOURCES})
 
 set_target_properties(RepostBot PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
-target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot libminizip ssl crypto)
+target_link_libraries(RepostBot Qt5::Core Qt5::Network TgBot libminizip curl ssl crypto)
 
 target_compile_definitions(RepostBot_test PRIVATE CATCH_CONFIG_RUNNER=1)
 set_target_properties(RepostBot_test PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER OFF)
-target_link_libraries(RepostBot_test Qt5::Core Qt5::Network TgBot libminizip ssl crypto)
+target_link_libraries(RepostBot_test Qt5::Core Qt5::Network TgBot libminizip curl ssl crypto)
 
 cotire(RepostBot)
 cotire(RepostBot_test)

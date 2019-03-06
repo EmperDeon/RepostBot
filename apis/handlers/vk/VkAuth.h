@@ -28,7 +28,7 @@ public:
     /*
      * Gets new token from authorization code
      * */
-    void setAuthCode(QueueTask *task, const QString &code);
+    void setAuthCode(QueueTask *task, const std::string &code);
 
 protected:
     QString defaultAuthUrl() { return VK_AUTH_DEFAULT_URL; }

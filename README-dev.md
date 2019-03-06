@@ -92,6 +92,11 @@ Handle errors, and logs (write to temp file, send to "admin" user)
 Any method that writes to Storage should call save after last write or at end of function
 
 
+## Network
+
+SSL certificates are downloaded from https://curl.haxx.se/ca/cacert.pem , and stored in app folder as cacert.pem
+
+
 #### Singletons
 
 - Runner

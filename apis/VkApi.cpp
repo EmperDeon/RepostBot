@@ -9,53 +9,24 @@
 #include <QtCore/QTimer>
 #include <Storage.h>
 #include <utils/logs/Logger.h>
+#include <thread>
 #include "VkApi.h"
 
-nlohmann::json VkApi::request(const QString &method, const nlohmann::json &params, User *user) {
-    QUrl c("https://api.vk.com/method/" + method);
-    QUrlQuery q;
+nlohmann::json VkApi::request(const std::string &method, Curl::params_type params, User *user) {
+    params["access_token"] = token_for_user(user);
 
-    QString user_token;
+    params["v"] = "5.92";
 
-    if (user != nullptr && !user->isEmpty() && storage()["tokens"].has_key(user->id)) {
-        user_token = storage()["tokens"][user->id].get<QString>();
-    }
-
-    if (user_token.isEmpty()) {
-        q.addQueryItem("access_token", VK_TOKEN);
-    } else {
-        q.addQueryItem("access_token", user_token);
-    }
-
-    q.addQueryItem("v", "5.92");
-
-    for (const auto &it : params.items()) {
-        q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));
-    }
-
-    c.setQuery(q);
-
-    return vk_request(c);
+    return vk_request("https://api.vk.com/method/" + method, params);
 }
 
-nlohmann::json VkApi::requestAuth(const QString &method, const nlohmann::json &params) {
-    nlohmann::json json;
+nlohmann::json VkApi::requestAuth(const std::string &method, Curl::params_type params) {
+    params["client_id"] = VK_AUTH_ID;
+    params["client_secret"] = VK_AUTH_SECRET;
+    params["redirect_uri"] = VK_AUTH_URL;
+    params["v"] = "5.92";
 
-    QUrl c("https://oauth.vk.com/" + method);
-    QUrlQuery q;
-
-    q.addQueryItem("client_id", VK_AUTH_ID);
-    q.addQueryItem("client_secret", VK_AUTH_SECRET);
-    q.addQueryItem("redirect_uri", VK_AUTH_URL);
-    q.addQueryItem("v", "5.92");
-
-    for (const auto &it : params.items()) {
-        q.addQueryItem(QString::fromStdString(it.key()), QString::fromStdString(it.value()));
-    }
-
-    c.setQuery(q);
-
-    return vk_request(c);
+    return vk_request("https://oauth.vk.com/" + method, params);
 }
 
 QList<Attachment *> VkApi::parseAttachments(const json &thing) {
@@ -87,23 +58,16 @@ QList<Attachment *> VkApi::parseAttachments(const json &thing) {
     return r;
 }
 
-json VkApi::vk_request(const QUrl &url) {
+json VkApi::vk_request(const std::string &url, Curl::params_type params) {
     QNetworkAccessManager manager;
     nlohmann::json json;
 
-    logD("Requesting url: " + url.toString());
+    logD("Requesting url: " + QString::fromStdString(url));
 
-    QNetworkReply *reply = manager.get(QNetworkRequest(url));
-    QEventLoop wait;
-    QObject::connect(&manager, SIGNAL(finished(QNetworkReply * )), &wait, SLOT(quit()));
-    QTimer::singleShot(10000, &wait, SLOT(quit()));
-    wait.exec();
+    std::string reply = Curl(url, params).get();
 
-    QString resp = QString::fromUtf8(reply->readAll());
-    reply->deleteLater();
-
-    if (!resp.isEmpty()) {
-        json = nlohmann::json::parse(resp.toStdString());
+    if (!reply.empty()) {
+        json = nlohmann::json::parse(reply);
 
         logD("Received response:");
         logV(json.dumpQ());
@@ -111,8 +75,23 @@ json VkApi::vk_request(const QUrl &url) {
         logW("Response is empty");
     }
 
-    QTimer::singleShot(3000, &wait, SLOT(quit()));
-    wait.exec();
+    if (!no_delay)
+        std::this_thread::sleep_for(VK_API_DELAY);
 
     return json;
+}
+
+std::string VkApi::token_for_user(User *user) {
+    std::string user_token;
+    auto tokens = storage()["tokens"];
+
+    if (user != nullptr && !user->isEmpty() && tokens.has_key(user->id)) {
+        user_token = tokens[user->id].get<std::string>();
+    }
+
+    if (user_token.empty()) {
+        return default_token;
+    } else {
+        return user_token;
+    }
 }

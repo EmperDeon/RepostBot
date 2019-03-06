@@ -11,7 +11,7 @@
 #include <utils/logs/Logger.h>
 
 void Storage::load() {
-    QFile f(STORAGE_FILE);
+    QFile f(STORAGE_FILE.c_str());
 
     if (f.open(QFile::ReadOnly)) {
         object = json::parse(QString::fromUtf8(f.readAll()).toStdString());
@@ -19,7 +19,7 @@ void Storage::load() {
 }
 
 void Storage::save() {
-    QFile f(STORAGE_FILE);
+    QFile f(STORAGE_FILE.c_str());
 
     if (f.open(QFile::WriteOnly)) {
         f.write(Storage::instance()->object.dumpQ(4).toUtf8());

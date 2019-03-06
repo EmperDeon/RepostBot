@@ -16,7 +16,7 @@ class VkHandler : public QueueHandler {
     VkAuth *auth;
 
 public:
-    VkHandler();
+    VkHandler(std::string default_token);
 
     static QString className() { return "VK"; }
 
@@ -38,7 +38,7 @@ public:
      *
      *  Returns posts list since last request(last_ids), grouped by Group
      * */
-    void getLastPosts(QueueTask *task, QString group_ids, QString last_ids);
+    void getLastPosts(QueueTask *task, std::string group_ids, std::string last_ids);
 
     /*
      * Fetch names for all group ids
@@ -50,7 +50,7 @@ public:
      *
      * Returns human name of group
      * */
-    void toggleSubscription(QueueTask *task, const QString &group_name, bool value);
+    void toggleSubscription(QueueTask *task, const std::string &group_name, bool value);
 
     /*
      * List subscriptions for user

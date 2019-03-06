@@ -18,7 +18,7 @@ class Attachment : public QObject {
 public:
     Attachment(const QString &_type, const QString &_url);
 
-    static QString downloadFile(const QString &url);
+    static std::string downloadFile(const QString &url);
 
     virtual TgBot::InputMedia::Ptr toTg();
 };

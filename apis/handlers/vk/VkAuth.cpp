@@ -44,10 +44,10 @@ void VkAuth::toggleAuth(QueueTask *task, bool adding) {
     }
 }
 
-void VkAuth::setAuthCode(QueueTask *task, const QString &code) {
+void VkAuth::setAuthCode(QueueTask *task, const std::string &code) {
     json &tokens = api->storage()["tokens"];
 
-    if (code.isEmpty()) {
+    if (code.empty()) {
         TASK_ERROR("No Code is passed");
     }
 
@@ -61,7 +61,7 @@ void VkAuth::setAuthCode(QueueTask *task, const QString &code) {
     Storage::save();
 
     // TODO: Verify that user token works
-    response = api->request("users.get", {{"user_ids", response["user_id"].get<int>()}}, &task->user);
+    response = api->request("users.get", {{"user_ids", response["user_id"]}}, &task->user);
 
     TASK_STATUS(QString("Logged in as %1 %2")
                         .arg(response["/response/0/first_name"].get<QString>())

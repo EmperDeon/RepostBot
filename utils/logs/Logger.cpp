@@ -15,7 +15,7 @@
 #include <utils/Zip.h>
 #include "Logger.h"
 
-Utils::Logger::Logger() : logs_dir(LOGS_DIR) {
+Utils::Logger::Logger() : logs_dir(LOGS_DIR.c_str()) {
     mutex = new QMutex;
 
     auto *timer = new QTimer;
@@ -121,7 +121,7 @@ QString Utils::Logger::currentLogFile() {
     file = logs_dir.absoluteFilePath(file);
 
     if (!logs_dir.exists()) {
-        QDir(BASE_PATH).mkdir("logs");
+        QDir(BASE_PATH.c_str()).mkdir("logs");
     }
 
     auto files = logs_dir.entryInfoList({"*.log"}, QDir::Files, QDir::Name);

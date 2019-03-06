@@ -6,10 +6,11 @@
 
 #include <models/Posts.h>
 #include <utils/logs/Logger.h>
+#include <utils/Utils.h>
 #include "VkHandler.h"
 
-VkHandler::VkHandler() {
-    api = new VkApi;
+VkHandler::VkHandler(std::string default_token) {
+    api = new VkApi(std::move(default_token));
     auth = new VkAuth(api);
 }
 
@@ -21,7 +22,7 @@ void VkHandler::action(QueueTask *task) {
         auth->toggleAuth(task, params[0] == "true");
 
     } else if (name == "setAuthCode") {
-        auth->setAuthCode(task, params[0]);
+        auth->setAuthCode(task, params[0].toStdString());
 
     } else if (name == "updateGroupNames") {
         updateGroupNames(task);
@@ -30,10 +31,10 @@ void VkHandler::action(QueueTask *task) {
         getLastPost(task, params[0], params.value(1, ""));
 
     } else if (name == "getLastPosts") {
-        getLastPosts(task, params[0], params[1]);
+        getLastPosts(task, params[0].toStdString(), params[1].toStdString());
 
     } else if (name == "toggleSubscription") {
-        toggleSubscription(task, params[0], params[1] == "true");
+        toggleSubscription(task, params[0].toStdString(), params[1] == "true");
 
     } else if (name == "listSubscriptions") {
         listSubscriptions(task);
@@ -100,19 +101,19 @@ void VkHandler::getLastPost(QueueTask *task, QString group_name, QString last_po
     task->setResult(model);
 }
 
-void VkHandler::getLastPosts(QueueTask *task, QString group_ids, QString last_ids) {
-    if (group_ids.isEmpty() || last_ids.isEmpty()) {
+void VkHandler::getLastPosts(QueueTask *task, std::string group_ids, std::string last_ids) {
+    if (group_ids.empty() || last_ids.empty()) {
         TASK_ERROR("no group id");
     }
 
     // Request
     json groups;
-    QStringList parsed_group_ids = {"string"}, posts; // First item is ignored
+    std::vector<std::string> parsed_group_ids = {"string"}, posts; // First item is ignored
 
-    for (const QString &id : group_ids.split(','))
-        parsed_group_ids << (id[0].isDigit() ? "-" + id : id);
+    for (const std::string &id : Utils::split(group_ids, ','))
+        parsed_group_ids.push_back(isdigit(id[0]) ? "-" + id : id);
 
-    json response = api->request("execute.fetchLastPostFrom", {{"group_ids", parsed_group_ids.join(',')},
+    json response = api->request("execute.fetchLastPostFrom", {{"group_ids", Utils::join(parsed_group_ids, ',')},
                                                                {"post_ids",  last_ids}}, &task->user);
 
     if (response.has_key("error")) {
@@ -126,7 +127,7 @@ void VkHandler::getLastPosts(QueueTask *task, QString group_ids, QString last_id
 
     // Organize and reorder
     for (const json &post : response["response"]) {
-        QString owner = QString::number(post["owner_id"].get<int>(0));
+        std::string owner = std::to_string(post["owner_id"].get<int>(0));
 
         groups[owner] += post;
     }
@@ -159,14 +160,14 @@ void VkHandler::getLastPosts(QueueTask *task, QString group_ids, QString last_id
 
 void VkHandler::updateGroupNames(QueueTask *task) {
     json response, &groups = api->storage()["groups"], &group_names = api->storage()["group_names"];
-    QStringList ids;
+    std::vector<std::string> ids;
 
     if (!groups.empty()) {
         for (const auto &it : groups.items())
-            for (const QString &group : it.value())
-                ids << group;
+            for (const std::string &group : it.value())
+                ids.push_back(group);
 
-        response = api->request("groups.getById", {{"group_ids", ids.join(',')}});
+        response = api->request("groups.getById", {{"group_ids", Utils::join(ids, ',')}});
 
         if (response.has_key("error")) {
             TASK_ERROR(response.dumpQ(2));
@@ -190,11 +191,11 @@ void VkHandler::updateGroupNames(QueueTask *task) {
     Storage::save();
 }
 
-void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, bool value) {
+void VkHandler::toggleSubscription(QueueTask *task, const std::string &group_name, bool value) {
     json &groups = api->storage()["groups"][task->user.id];
     json response = api->request("groups.getById", {{"group_id", group_name}}, &task->user);
 
-    if (group_name.isEmpty() || group_name == "null") {
+    if (group_name.empty() || group_name == "null") {
         TASK_ERROR("no group id");
     }
 
@@ -208,7 +209,7 @@ void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, b
         groups.eraseAllV(group_name);
         task->setResult(new Status("Unsubscribed from group \"" + human_name + "\""));
 
-    } else if (!groups.has_value(group_name.toStdString())) {
+    } else if (!groups.has_value(group_name)) {
         if (isReachedLimit(task)) {
             TASK_ERROR("Reached limit of groups");
         }
@@ -227,12 +228,12 @@ void VkHandler::toggleSubscription(QueueTask *task, const QString &group_name, b
 
 void VkHandler::listSubscriptions(QueueTask *task) {
     json response, &groups = api->storage()["groups"][task->user.id];
-    QStringList ids;
+    std::vector<std::string> ids;
 
     if (!groups.empty()) {
-        for (const QString &group : groups) ids << group;
+        for (const std::string &group : groups) ids.push_back(group);
 
-        response = api->request("groups.getById", {{"group_ids", ids.join(',')},
+        response = api->request("groups.getById", {{"group_ids", Utils::join(ids, ',')},
                                                    {"fields",    "name"}});
 
         if (response.has_key("error")) {
@@ -241,21 +242,20 @@ void VkHandler::listSubscriptions(QueueTask *task) {
     }
 
     ids.clear();
-    ids << "Subscriptions:";
+    ids.push_back("Subscriptions:");
     for (const json &group : response["response"]) {
         QString s("%1 - %2");
-        ids << s.arg(group["name"].get<QString>()).arg(group["screen_name"].get<QString>());
+        ids.push_back(s.arg(group["name"].get<QString>()).arg(group["screen_name"].get<QString>()).toStdString());
     }
-    ids << "\nCan add " +
-           QString::number(groupsLimitFor(&task->user) - api->storage()["groups"][task->user.id].size()) +
-           " more groups";
+    ids.push_back(QString("\nCan add %1 more groups").arg(
+            groupsLimitFor(&task->user) - api->storage()["groups"][task->user.id].size()).toStdString());
 
     if (isReachedLimit(task)) {
-        ids
-                << "Due to limitations of VK wall.get API, server can successfully make only 5000 requests in 1 day, which is 'get each of 100 groups every 30 minutes'";
+        ids.push_back(
+                "Due to limitations of VK wall.get API, server can successfully make only 5000 requests in 1 day, which is 'get each of 100 groups every 30 minutes'");
     }
 
-    TASK_STATUS(ids.join('\n'));
+    TASK_STATUS(Utils::join(ids, '\n').c_str());
 }
 
 void VkHandler::fetchGroupsFromMe(QueueTask *task) {

@@ -11,18 +11,16 @@
 
 
 TEST_CASE("should make correct basic request", "[vk]") {
-    QString vk_token(VK_TOKEN);
-    SKIP_IF(vk_token.isEmpty(), "VK token isn't present");
+    std::string vk_token(VK_TOKEN);
+    SKIP_IF(vk_token.empty(), "VK token isn't present");
 
-    VkApi api;
+    VkApi api(vk_token, true);
 
     json response = api.request("account.getInfo");
-    INFO(response.dump(1));
 
     REQUIRE(response.has_key("response"));
     REQUIRE_FALSE(response.has_key("error"));
 
     response = response["response"];
-
     REQUIRE_FALSE(response.empty());
 }

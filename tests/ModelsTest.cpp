@@ -12,13 +12,13 @@ using Catch::Matchers::StartsWith;
 
 
 TEST_CASE("should download file", "[Models]") {
-    QString filename = Attachment::downloadFile("https://ya.ru/index.html");
+    std::string filename = Attachment::downloadFile("https://ya.ru/");
 
-    INFO(filename.toStdString());
-    REQUIRE_FALSE(filename.isEmpty());
-    REQUIRE_THAT(filename.toStdString(), StartsWith((CACHE_PATH).toStdString()));
+    INFO(filename);
+    REQUIRE_FALSE(filename.empty());
+    REQUIRE_THAT(filename, StartsWith(CACHE_PATH));
 
-    QFile file(filename);
+    QFile file(QString::fromStdString(filename));
 
     REQUIRE(file.open(QFile::ReadOnly));
     REQUIRE(file.size() > 0);

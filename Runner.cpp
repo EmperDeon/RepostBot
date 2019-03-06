@@ -21,7 +21,7 @@ Runner::Runner() {
 void Runner::start() {
     api_telegram = new TelegramApi;
 
-    handlers = {new VkHandler, new TelegramHandler(api_telegram)};
+    handlers = {new VkHandler(VK_TOKEN), new TelegramHandler(api_telegram)};
     manager->addHandlers(handlers);
 
     bots = {{"Telegram", new TelegramBot(this, api_telegram)}};

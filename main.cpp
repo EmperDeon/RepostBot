@@ -8,6 +8,8 @@
 #include <utils/Zip.h>
 #include <utils/logs/Logger.h>
 #include <QtCore/QTimer>
+#include <curl/curl.h>
+#include <utils/Curl.h>
 #include "Runner.h"
 
 class TCoreApplication : public QCoreApplication {
@@ -28,6 +30,7 @@ public:
 
 int main(int argc, char **argv) {
     TCoreApplication a(argc, argv);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
 
     logI("");
     logI("Started RepostBot");
